@@ -1,0 +1,353 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>CityFocus</title>
+<link href="https://fonts.googleapis.com/css2?family=Bricolage+Grotesque:wght@400;600;800&display=swap" rel="stylesheet">
+<style>
+:root{--bg:#e9efe4;--panel:#fbfcf8;--ink:#1f2d2a;--mute:#5d6e68;--line:#cfd9c8;--accent:#e8a33d;--ok:#3e8e5a;--bad:#c8553d;--sky:#bfd8e6;--grass:#a9cf93}
+*{box-sizing:border-box;margin:0}
+body{font-family:'Bricolage Grotesque',system-ui,sans-serif;background:var(--bg);color:var(--ink);min-height:100vh;font-size:16px}
+button,input,select{font:inherit;color:inherit}
+button{cursor:pointer;border:0;border-radius:10px;padding:.6rem 1rem;background:var(--ink);color:#fff;font-weight:600}
+button.alt{background:transparent;color:var(--ink);border:1.5px solid var(--ink)}
+button.ok{background:var(--ok)} button.bad{background:var(--bad)}
+button:focus-visible,input:focus-visible,select:focus-visible{outline:3px solid var(--accent);outline-offset:2px}
+input,select{padding:.6rem .8rem;border:1.5px solid var(--line);border-radius:10px;background:#fff;width:100%}
+label{display:block;font-size:.85rem;color:var(--mute);margin:.7rem 0 .25rem}
+h1,h2,h3{font-weight:800;letter-spacing:-.02em}
+h2{font-size:2rem;margin-bottom:1.2rem}
+.hidden{display:none!important}
+/* app */
+#app{display:grid;grid-template-columns:230px 1fr;min-height:100vh}
+nav{background:var(--ink);color:#fff;padding:1.5rem 1rem;display:flex;flex-direction:column;gap:.3rem;position:sticky;top:0;height:100vh}
+nav .logo{font-size:1.5rem;font-weight:800;margin:0 .5rem 1.5rem}
+nav button{background:transparent;text-align:left;color:#cdd8d3;font-weight:400;padding:.7rem .8rem}
+nav button.on{background:var(--accent);color:var(--ink);font-weight:600}
+nav .who{margin-top:auto;font-size:.85rem;color:#9fb0aa;padding:0 .5rem}
+main{padding:2rem 2.5rem;max-width:1100px;width:100%}
+.grid2{display:grid;grid-template-columns:1fr 1fr;gap:1.2rem}
+.big{font-size:3.4rem;font-weight:800;line-height:1;font-variant-numeric:tabular-nums}
+.muted{color:var(--mute)}
+.bar{height:12px;border-radius:99px;background:var(--line);overflow:hidden;margin:.6rem 0}
+.bar i{display:block;height:100%;background:var(--ok);width:0;transition:width .4s}
+.quote{font-size:1.35rem;font-weight:600;line-height:1.3}
+/* tasks */
+.add{display:grid;grid-template-columns:1fr 150px auto;gap:.6rem;margin-bottom:1rem}
+.task{display:flex;align-items:center;gap:.8rem;padding:.8rem 1rem;border:1.5px solid var(--line);border-radius:12px;background:var(--panel);margin-bottom:.5rem}
+.task .t{flex:1}.task.done .t{text-decoration:line-through;color:var(--ok)}.task.failed .t{text-decoration:line-through;color:var(--bad)}
+.tag{font-size:.8rem;padding:.15rem .6rem;border-radius:99px;background:var(--sky)}
+.task button{padding:.4rem .7rem;font-size:.85rem}
+/* pomodoro */
+.timer{text-align:center}
+.timer .big{font-size:7rem;margin:1rem 0}
+.modes{display:flex;gap:.5rem;justify-content:center}
+.modes button{background:transparent;color:var(--mute);border:1.5px solid var(--line)}
+.modes button.on{background:var(--accent);color:var(--ink);border-color:var(--accent)}
+.ctrl{display:flex;gap:.6rem;justify-content:center}
+.cfg{display:grid;grid-template-columns:repeat(3,1fr);gap:.8rem}
+/* city */
+#cityWrap{position:relative}
+#city{display:grid;grid-template-columns:repeat(10,1fr);gap:3px;background:var(--grass);padding:6px;border-radius:16px;border:1.5px solid var(--line)}
+#city div{aspect-ratio:1;background:rgba(255,255,255,.28);border-radius:6px;display:flex;align-items:center;justify-content:center;font-size:2.1rem}
+#city div.pop{animation:pop .5s}
+#city div.boom{animation:boom .5s}
+@keyframes pop{from{transform:scale(0)}to{transform:scale(1)}}
+@keyframes boom{50%{transform:scale(1.3) rotate(8deg);filter:grayscale(1)}}
+.stats{display:flex;gap:1.5rem;margin-bottom:1rem;flex-wrap:wrap}
+/* mood */
+.moods{display:flex;gap:.8rem;margin-bottom:1.2rem}
+.moods button{flex:1;background:var(--panel);color:var(--ink);border:1.5px solid var(--line);font-size:2.4rem;padding:1rem .5rem;line-height:1}
+.moods button span{display:block;font-size:.85rem;margin-top:.4rem;font-weight:400}
+.moods button.on{border-color:var(--ink);background:var(--accent)}
+.phrase{display:flex;gap:.6rem;align-items:center;padding:.6rem 0;border-bottom:1px solid var(--line)}
+.phrase span{flex:1}
+.phrase button{padding:.35rem .7rem;font-size:.85rem}
+.pgrid{display:grid;grid-template-columns:1fr 1fr;gap:.6rem}
+@media(prefers-reduced-motion:reduce){*{animation:none!important;transition:none!important}}
+</style>
+</head>
+<body>
+
+<!-- APLICACIÓN -->
+<div id="app">
+  <nav aria-label="Principal">
+    <div class="logo">🏙️ CityFocus</div>
+    <button data-v="dash" class="on">Panel</button>
+    <button data-v="tasks">Tareas</button>
+    <button data-v="pomo">Pomodoro</button>
+    <button data-v="city">Mi ciudad</button>
+    <button data-v="mood">Ánimo</button>
+    <button data-v="cfg">Configuración</button>
+    <div class="who"><span id="who"></span></div>
+  </nav>
+
+  <main>
+    <!-- DASHBOARD -->
+    <section id="v-dash">
+      <h2 id="hello">Hola</h2>
+      <div class="grid2">
+        <div class="card"><h3>Progreso de hoy</h3><div class="big" id="dPct">0%</div><div class="bar"><i id="dBar"></i></div><p class="muted" id="dTxt"></p></div>
+        <div class="card"><h3>Tu ciudad</h3><div class="big" id="dCity">0</div><p class="muted">edificios en pie</p><button class="alt" data-go="city" style="margin-top:.8rem">Ver ciudad</button></div>
+        <div class="card"><h3>Próxima sesión</h3><div class="big" id="dTimer">25:00</div><button class="alt" data-go="pomo" style="margin-top:.8rem">Ir al temporizador</button></div>
+        <div class="card"><h3>Frase del día</h3><p class="quote" id="dQuote">Elige tu estado de ánimo para recibir una frase.</p><button class="alt" data-go="mood" style="margin-top:.8rem">Cómo me siento</button></div>
+      </div>
+    </section>
+
+    <!-- TAREAS -->
+    <section id="v-tasks" class="hidden">
+      <h2>Agenda de hoy</h2>
+      <form class="add" id="taskForm">
+        <input id="tTitle" placeholder="Nueva tarea" required aria-label="Título de la tarea">
+        <select id="tType" aria-label="Tipo"><option>Estudio</option><option>Trabajo</option><option>Hábito</option></select>
+        <button>Añadir tarea</button>
+      </form>
+      <div id="taskList"></div>
+    </section>
+
+    <!-- POMODORO -->
+    <section id="v-pomo" class="hidden">
+      <h2>Pomodoro</h2>
+      <div class="card timer">
+        <div class="modes" id="modes">
+          <button data-m="work" class="on">Concentración</button>
+          <button data-m="short">Descanso corto</button>
+          <button data-m="long">Descanso largo</button>
+        </div>
+        <div class="big" id="clock">25:00</div>
+        <div class="ctrl">
+          <button class="ok" id="pStart">Iniciar</button>
+          <button class="alt" id="pPause">Pausar</button>
+          <button class="alt" id="pReset">Reiniciar</button>
+        </div>
+        <p class="muted" style="margin-top:1rem">Sesiones completadas hoy: <b id="pCount">0</b></p>
+      </div>
+      <div class="card" style="margin-top:1.2rem">
+        <h3>Duración (minutos)</h3>
+        <div class="cfg">
+          <div><label for="cWork">Trabajo</label><input id="cWork" type="number" min="1" max="120"></div>
+          <div><label for="cShort">Descanso corto</label><input id="cShort" type="number" min="1" max="60"></div>
+          <div><label for="cLong">Descanso largo</label><input id="cLong" type="number" min="1" max="90"></div>
+        </div>
+        <button id="cSave" style="margin-top:1rem">Guardar tiempos</button>
+      </div>
+    </section>
+
+    <!-- CIUDAD -->
+    <section id="v-city" class="hidden">
+      <h2>Mi ciudad</h2>
+      <div class="stats">
+        <div><div class="big" id="cBuilt">0</div><span class="muted">edificios</span></div>
+        <div><div class="big" id="cLost">0</div><span class="muted">perdidos</span></div>
+      </div>
+      <div id="cityWrap"><div id="city" aria-label="Mapa de la ciudad"></div></div>
+      <p class="muted" id="cityMsg" style="margin-top:.8rem">Completa tareas para construir. Marca una como fallida y perderás un edificio.</p>
+    </section>
+
+    <!-- ÁNIMO -->
+    <section id="v-mood" class="hidden">
+      <h2>¿Cómo te sientes hoy?</h2>
+      <div class="moods" id="moods"></div>
+      <div class="card"><p class="quote" id="moodQuote">Selecciona un estado de ánimo.</p></div>
+    </section>
+
+    <!-- CONFIG -->
+    <section id="v-cfg" class="hidden">
+      <h2>Configuración</h2>
+      <div class="card">
+        <h3>Perfil</h3>
+        <div class="pgrid">
+          <div><label for="pfName">Nombre</label><input id="pfName"></div>
+          <div><label for="pfMail">Correo</label><input id="pfMail" type="email"></div>
+        </div>
+        <button id="pfSave" style="margin-top:1rem">Guardar perfil</button>
+      </div>
+      <div class="card" style="margin-top:1.2rem">
+        <h3>Mis frases motivacionales</h3>
+        <div class="add" style="grid-template-columns:1fr 150px auto;margin-top:.8rem" >
+          <input id="phText" placeholder="Escribe tu frase" aria-label="Frase">
+          <select id="phMood" aria-label="Estado"></select>
+          <button id="phAdd">Añadir</button>
+        </div>
+        <div id="phList"></div>
+      </div>
+    </section>
+  </main>
+</div>
+
+<script>
+/* CityFocus - cliente. Habla con la API REST de Express (/api/...) */
+const MOODS = {
+  feliz:{e:'😄',l:'Feliz'}, motivado:{e:'🔥',l:'Motivado'}, tranquilo:{e:'😌',l:'Tranquilo'},
+  cansado:{e:'😴',l:'Cansado'}, triste:{e:'😔',l:'Triste'}
+};
+const state = { user:null, tasks:[], city:{cells:[],lost:0}, phrases:[], mood:null, quote:'', pomo:{work:25,short:5,long:15}, sessions:0 };
+const $ = s => document.querySelector(s);
+const $$ = s => document.querySelectorAll(s);
+const esc = s => String(s).replace(/[&<>"]/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c]));
+
+/* ============ API ============ */
+async function call(method, path, body){
+  const r = await fetch('/api'+path, { method, headers:{'Content-Type':'application/json'}, body: body===undefined ? undefined : JSON.stringify(body) });
+  if(!r.ok){ const e = await r.json().catch(()=>({})); throw new Error(e.error || 'Error '+r.status); }
+  return r.status === 204 ? null : r.json();
+}
+function toast(msg){
+  let t = $('#toast');
+  if(!t){ t = document.createElement('div'); t.id = 'toast'; t.setAttribute('role','alert');
+    t.style.cssText = 'position:fixed;bottom:1.2rem;right:1.2rem;background:#c8553d;color:#fff;padding:.8rem 1.2rem;border-radius:10px;max-width:360px;z-index:9'; document.body.appendChild(t); }
+  t.textContent = msg; t.hidden = false; clearTimeout(t._h); t._h = setTimeout(() => t.hidden = true, 4500);
+}
+const safe = fn => async (...a) => { try{ await fn(...a); }catch(e){ toast(e.message === 'Failed to fetch' ? 'No se pudo conectar con el servidor.' : e.message); } };
+
+async function load(){
+  const [user, tasks, city, phrases, today] = await Promise.all([
+    call('GET','/user'), call('GET','/tasks'), call('GET','/city'), call('GET','/phrases'), call('GET','/moods/today')
+  ]);
+  Object.assign(state, { user, tasks, city, phrases, pomo:user.pomodoro, sessions:user.sessions,
+    mood: today ? today.mood : null, quote: today ? today.phrase : '' });
+}
+
+/* ============ NAVEGACIÓN ============ */
+function show(v){
+  $$('main > section').forEach(s => s.classList.add('hidden'));
+  $('#v-'+v).classList.remove('hidden');
+  $$('nav button[data-v]').forEach(b => b.classList.toggle('on', b.dataset.v === v));
+  renderAll();
+}
+$$('nav button[data-v]').forEach(b => b.onclick = () => show(b.dataset.v));
+$$('[data-go]').forEach(b => b.onclick = () => show(b.dataset.go));
+
+/* ============ TAREAS + CIUDAD ============ */
+let fx = null;
+const built = () => state.city.cells.filter(Boolean).length;
+$('#taskForm').onsubmit = safe(async e => {
+  e.preventDefault();
+  const t = await call('POST','/tasks',{ title:$('#tTitle').value, type:$('#tType').value });
+  state.tasks.push(t); $('#tTitle').value = ''; renderAll();
+});
+async function setStatus(t, st){
+  const res = await call('PUT','/tasks/'+t._id,{ status:st });
+  Object.assign(t, res.task);
+  if(res.city) state.city = res.city;
+  fx = res.effect ? { i:res.effect.index, t:res.effect.type } : null;  // la ciudad cambia en el servidor
+  renderAll();
+}
+$('#taskList').onclick = safe(async e => {
+  const b = e.target.closest('button'); if(!b) return;
+  const id = b.dataset.id, a = b.dataset.a, t = state.tasks.find(t => t._id === id);
+  if(a === 'done' || a === 'failed') await setStatus(t, t.status === a ? 'pending' : a);
+  if(a === 'edit'){ const n = prompt('Editar tarea', t.title);
+    if(n && n.trim()){ Object.assign(t, (await call('PUT','/tasks/'+id,{ title:n.trim() })).task); renderAll(); } }
+  if(a === 'del'){ await call('DELETE','/tasks/'+id); state.tasks = state.tasks.filter(x => x._id !== id); renderAll(); }
+});
+function renderTasks(){
+  const el = $('#taskList');
+  if(!state.tasks.length){ el.innerHTML = '<p class="muted">Aún no tienes tareas. Añade la primera para empezar a construir.</p>'; return; }
+  el.innerHTML = state.tasks.map(t => `
+    <div class="task ${t.status}">
+      <span class="tag">${esc(t.type)}</span><span class="t">${esc(t.title)}</span>
+      <button class="ok" data-a="done" data-id="${t._id}">${t.status==='done'?'Desmarcar':'Completar'}</button>
+      <button class="bad" data-a="failed" data-id="${t._id}">${t.status==='failed'?'Desmarcar':'Fallida'}</button>
+      <button class="alt" data-a="edit" data-id="${t._id}">Editar</button>
+      <button class="alt" data-a="del" data-id="${t._id}">Eliminar</button>
+    </div>`).join('');
+}
+function renderCity(){
+  $('#city').innerHTML = state.city.cells.map((c,i) => `<div class="${fx&&fx.i===i?fx.t:''}">${c}</div>`).join('');
+  fx = null;
+  $('#cBuilt').textContent = built(); $('#cLost').textContent = state.city.lost;
+}
+
+/* ============ DASHBOARD ============ */
+function renderDash(){
+  const total = state.tasks.length, done = state.tasks.filter(t => t.status === 'done').length;
+  const pct = total ? Math.round(done/total*100) : 0;
+  $('#hello').textContent = 'Hola, ' + state.user.name;
+  $('#dPct').textContent = pct + '%'; $('#dBar').style.width = pct + '%';
+  $('#dTxt').textContent = total ? `${done} de ${total} tareas completadas` : 'Sin tareas todavía.';
+  $('#dCity').textContent = built();
+  $('#dTimer').textContent = fmt(state.pomo.work*60);
+  if(state.quote) $('#dQuote').textContent = state.quote;
+}
+
+/* ============ POMODORO ============ */
+let mode = 'work', left = 25*60, tick = null;
+const fmt = s => String(Math.floor(s/60)).padStart(2,'0')+':'+String(s%60).padStart(2,'0');
+function setMode(m){
+  mode = m; clearInterval(tick); tick = null; left = state.pomo[m]*60;
+  $$('#modes button').forEach(b => b.classList.toggle('on', b.dataset.m === m));
+  $('#clock').textContent = fmt(left);
+}
+$$('#modes button').forEach(b => b.onclick = () => setMode(b.dataset.m));
+$('#pStart').onclick = () => {
+  if(tick) return;
+  tick = setInterval(async () => {
+    left--; $('#clock').textContent = fmt(left); document.title = fmt(left)+' · CityFocus';
+    if(left <= 0){
+      clearInterval(tick); tick = null; document.title = 'CityFocus';
+      if(mode === 'work'){ try{ state.sessions = (await call('POST','/user/session')).count; $('#pCount').textContent = state.sessions; }catch(e){ toast(e.message); } }
+      alert(mode === 'work' ? '¡Sesión terminada! Hora de descansar.' : 'Descanso terminado. ¡A concentrarse!');
+      setMode(mode === 'work' ? 'short' : 'work');
+    }
+  }, 1000);
+};
+$('#pPause').onclick = () => { clearInterval(tick); tick = null; };
+$('#pReset').onclick = () => setMode(mode);
+function loadCfg(){ $('#cWork').value = state.pomo.work; $('#cShort').value = state.pomo.short; $('#cLong').value = state.pomo.long; $('#pCount').textContent = state.sessions; }
+$('#cSave').onclick = safe(async () => {
+  const n = (id, d) => Math.max(1, parseInt($(id).value) || d);
+  const u = await call('PUT','/user',{ pomodoro:{ work:n('#cWork',25), short:n('#cShort',5), long:n('#cLong',15) } });
+  state.user = u; state.pomo = u.pomodoro; setMode(mode); renderAll();
+});
+
+/* ============ ÁNIMO Y FRASES ============ */
+function renderMoods(){
+  $('#moods').innerHTML = Object.entries(MOODS).map(([k,m]) =>
+    `<button data-k="${k}" class="${state.mood===k?'on':''}">${m.e}<span>${m.l}</span></button>`).join('');
+}
+$('#moods').onclick = safe(async e => {
+  const b = e.target.closest('button'); if(!b) return;
+  const r = await call('POST','/moods',{ mood:b.dataset.k });   // el servidor elige la frase (sistema + propias)
+  state.mood = r.mood; state.quote = r.phrase;
+  $('#moodQuote').textContent = state.quote; renderMoods();
+});
+function renderPhrases(){
+  $('#phMood').innerHTML = Object.entries(MOODS).map(([k,m]) => `<option value="${k}">${m.l}</option>`).join('');
+  $('#phList').innerHTML = state.phrases.length ? state.phrases.map(p => `
+    <div class="phrase"><span class="tag">${MOODS[p.mood].l}</span><span>${esc(p.text)}</span>
+    <button class="alt" data-a="edit" data-id="${p._id}">Editar</button><button class="alt" data-a="del" data-id="${p._id}">Eliminar</button></div>`).join('')
+    : '<p class="muted" style="margin-top:.8rem">No has añadido frases propias. Se usarán solo las del sistema.</p>';
+}
+$('#phAdd').onclick = safe(async () => {
+  const text = $('#phText').value.trim(); if(!text) return;
+  state.phrases.push(await call('POST','/phrases',{ text, mood:$('#phMood').value }));
+  $('#phText').value = ''; renderPhrases();
+});
+$('#phList').onclick = safe(async e => {
+  const b = e.target.closest('button'); if(!b) return;
+  const p = state.phrases.find(x => x._id === b.dataset.id);
+  if(b.dataset.a === 'del'){ await call('DELETE','/phrases/'+p._id); state.phrases = state.phrases.filter(x => x !== p); }
+  else { const n = prompt('Editar frase', p.text); if(!n || !n.trim()) return; Object.assign(p, await call('PUT','/phrases/'+p._id,{ text:n.trim() })); }
+  renderPhrases();
+});
+$('#pfSave').onclick = safe(async () => {
+  const u = await call('PUT','/user',{ name:$('#pfName').value, email:$('#pfMail').value });
+  state.user = u; $('#who').textContent = u.name; renderAll();
+});
+
+/* ============ RENDER GENERAL ============ */
+function renderAll(){
+  if(!state.user) return;
+  renderTasks(); renderCity(); renderDash(); renderMoods(); renderPhrases(); loadCfg();
+  $('#pfName').value = state.user.name; $('#pfMail').value = state.user.email;
+  if(state.quote) $('#moodQuote').textContent = state.quote;
+}
+(async () => {
+  try{ await load(); setMode('work'); $('#who').textContent = state.user.name; show('dash'); }
+  catch(e){ toast('No se pudo conectar con el servidor: ' + e.message); }
+})();
+</script>
+</body>
+</html>

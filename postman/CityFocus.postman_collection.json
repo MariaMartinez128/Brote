@@ -1,0 +1,883 @@
+{
+ "info": {
+  "name": "CityFocus API",
+  "schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json"
+ },
+ "variable": [
+  {
+   "key": "baseUrl",
+   "value": "http://localhost:3000/api"
+  },
+  {
+   "key": "taskId",
+   "value": ""
+  },
+  {
+   "key": "phraseId",
+   "value": ""
+  }
+ ],
+ "item": [
+  {
+   "name": "Sistema",
+   "item": [
+    {
+     "name": "Health",
+     "event": [
+      {
+       "listen": "test",
+       "script": {
+        "type": "text/javascript",
+        "exec": [
+         "pm.test('Código 200', () => pm.response.to.have.status(200));"
+        ]
+       }
+      }
+     ],
+     "request": {
+      "method": "GET",
+      "header": [
+       {
+        "key": "Content-Type",
+        "value": "application/json"
+       }
+      ],
+      "url": {
+       "raw": "{{baseUrl}}/health",
+       "host": [
+        "{{baseUrl}}"
+       ],
+       "path": [
+        "health"
+       ]
+      }
+     }
+    }
+   ]
+  },
+  {
+   "name": "Usuario",
+   "item": [
+    {
+     "name": "Obtener perfil",
+     "event": [
+      {
+       "listen": "test",
+       "script": {
+        "type": "text/javascript",
+        "exec": [
+         "pm.test('Código 200', () => pm.response.to.have.status(200));"
+        ]
+       }
+      }
+     ],
+     "request": {
+      "method": "GET",
+      "header": [
+       {
+        "key": "Content-Type",
+        "value": "application/json"
+       }
+      ],
+      "url": {
+       "raw": "{{baseUrl}}/user",
+       "host": [
+        "{{baseUrl}}"
+       ],
+       "path": [
+        "user"
+       ]
+      }
+     }
+    },
+    {
+     "name": "Actualizar perfil",
+     "event": [
+      {
+       "listen": "test",
+       "script": {
+        "type": "text/javascript",
+        "exec": [
+         "pm.test('Código 200', () => pm.response.to.have.status(200));"
+        ]
+       }
+      }
+     ],
+     "request": {
+      "method": "PUT",
+      "header": [
+       {
+        "key": "Content-Type",
+        "value": "application/json"
+       }
+      ],
+      "url": {
+       "raw": "{{baseUrl}}/user",
+       "host": [
+        "{{baseUrl}}"
+       ],
+       "path": [
+        "user"
+       ]
+      },
+      "body": {
+       "mode": "raw",
+       "raw": "{\n  \"name\": \"Ana\",\n  \"email\": \"ana@correo.com\"\n}"
+      }
+     }
+    },
+    {
+     "name": "Actualizar tiempos Pomodoro",
+     "event": [
+      {
+       "listen": "test",
+       "script": {
+        "type": "text/javascript",
+        "exec": [
+         "pm.test('Código 200', () => pm.response.to.have.status(200));"
+        ]
+       }
+      }
+     ],
+     "request": {
+      "method": "PUT",
+      "header": [
+       {
+        "key": "Content-Type",
+        "value": "application/json"
+       }
+      ],
+      "url": {
+       "raw": "{{baseUrl}}/user",
+       "host": [
+        "{{baseUrl}}"
+       ],
+       "path": [
+        "user"
+       ]
+      },
+      "body": {
+       "mode": "raw",
+       "raw": "{\n  \"pomodoro\": {\n    \"work\": 30,\n    \"short\": 5,\n    \"long\": 20\n  }\n}"
+      }
+     }
+    },
+    {
+     "name": "Sumar sesión Pomodoro",
+     "event": [
+      {
+       "listen": "test",
+       "script": {
+        "type": "text/javascript",
+        "exec": [
+         "pm.test('Código 200', () => pm.response.to.have.status(200));"
+        ]
+       }
+      }
+     ],
+     "request": {
+      "method": "POST",
+      "header": [
+       {
+        "key": "Content-Type",
+        "value": "application/json"
+       }
+      ],
+      "url": {
+       "raw": "{{baseUrl}}/user/session",
+       "host": [
+        "{{baseUrl}}"
+       ],
+       "path": [
+        "user",
+        "session"
+       ]
+      }
+     }
+    }
+   ]
+  },
+  {
+   "name": "Tareas",
+   "item": [
+    {
+     "name": "Listar tareas",
+     "event": [
+      {
+       "listen": "test",
+       "script": {
+        "type": "text/javascript",
+        "exec": [
+         "pm.test('Código 200', () => pm.response.to.have.status(200));"
+        ]
+       }
+      }
+     ],
+     "request": {
+      "method": "GET",
+      "header": [
+       {
+        "key": "Content-Type",
+        "value": "application/json"
+       }
+      ],
+      "url": {
+       "raw": "{{baseUrl}}/tasks",
+       "host": [
+        "{{baseUrl}}"
+       ],
+       "path": [
+        "tasks"
+       ]
+      }
+     }
+    },
+    {
+     "name": "Crear tarea",
+     "event": [
+      {
+       "listen": "test",
+       "script": {
+        "type": "text/javascript",
+        "exec": [
+         "pm.test('Código 201', () => pm.response.to.have.status(201));",
+         "pm.collectionVariables.set('taskId', pm.response.json()._id);"
+        ]
+       }
+      }
+     ],
+     "request": {
+      "method": "POST",
+      "header": [
+       {
+        "key": "Content-Type",
+        "value": "application/json"
+       }
+      ],
+      "url": {
+       "raw": "{{baseUrl}}/tasks",
+       "host": [
+        "{{baseUrl}}"
+       ],
+       "path": [
+        "tasks"
+       ]
+      },
+      "body": {
+       "mode": "raw",
+       "raw": "{\n  \"title\": \"Estudiar Node\",\n  \"type\": \"Estudio\"\n}"
+      }
+     }
+    },
+    {
+     "name": "Crear tarea sin título (error)",
+     "event": [
+      {
+       "listen": "test",
+       "script": {
+        "type": "text/javascript",
+        "exec": [
+         "pm.test('Código 400', () => pm.response.to.have.status(400));"
+        ]
+       }
+      }
+     ],
+     "request": {
+      "method": "POST",
+      "header": [
+       {
+        "key": "Content-Type",
+        "value": "application/json"
+       }
+      ],
+      "url": {
+       "raw": "{{baseUrl}}/tasks",
+       "host": [
+        "{{baseUrl}}"
+       ],
+       "path": [
+        "tasks"
+       ]
+      },
+      "body": {
+       "mode": "raw",
+       "raw": "{\n  \"title\": \"\"\n}"
+      }
+     }
+    },
+    {
+     "name": "Editar título",
+     "event": [
+      {
+       "listen": "test",
+       "script": {
+        "type": "text/javascript",
+        "exec": [
+         "pm.test('Código 200', () => pm.response.to.have.status(200));"
+        ]
+       }
+      }
+     ],
+     "request": {
+      "method": "PUT",
+      "header": [
+       {
+        "key": "Content-Type",
+        "value": "application/json"
+       }
+      ],
+      "url": {
+       "raw": "{{baseUrl}}/tasks/{{taskId}}",
+       "host": [
+        "{{baseUrl}}"
+       ],
+       "path": [
+        "tasks",
+        "{{taskId}}"
+       ]
+      },
+      "body": {
+       "mode": "raw",
+       "raw": "{\n  \"title\": \"Estudiar Express\"\n}"
+      }
+     }
+    },
+    {
+     "name": "Completar (construye edificio)",
+     "event": [
+      {
+       "listen": "test",
+       "script": {
+        "type": "text/javascript",
+        "exec": [
+         "pm.test('Código 200', () => pm.response.to.have.status(200));"
+        ]
+       }
+      }
+     ],
+     "request": {
+      "method": "PUT",
+      "header": [
+       {
+        "key": "Content-Type",
+        "value": "application/json"
+       }
+      ],
+      "url": {
+       "raw": "{{baseUrl}}/tasks/{{taskId}}",
+       "host": [
+        "{{baseUrl}}"
+       ],
+       "path": [
+        "tasks",
+        "{{taskId}}"
+       ]
+      },
+      "body": {
+       "mode": "raw",
+       "raw": "{\n  \"status\": \"done\"\n}"
+      }
+     }
+    },
+    {
+     "name": "Marcar fallida (destruye edificio)",
+     "event": [
+      {
+       "listen": "test",
+       "script": {
+        "type": "text/javascript",
+        "exec": [
+         "pm.test('Código 200', () => pm.response.to.have.status(200));"
+        ]
+       }
+      }
+     ],
+     "request": {
+      "method": "PUT",
+      "header": [
+       {
+        "key": "Content-Type",
+        "value": "application/json"
+       }
+      ],
+      "url": {
+       "raw": "{{baseUrl}}/tasks/{{taskId}}",
+       "host": [
+        "{{baseUrl}}"
+       ],
+       "path": [
+        "tasks",
+        "{{taskId}}"
+       ]
+      },
+      "body": {
+       "mode": "raw",
+       "raw": "{\n  \"status\": \"failed\"\n}"
+      }
+     }
+    },
+    {
+     "name": "Volver a pendiente",
+     "event": [
+      {
+       "listen": "test",
+       "script": {
+        "type": "text/javascript",
+        "exec": [
+         "pm.test('Código 200', () => pm.response.to.have.status(200));"
+        ]
+       }
+      }
+     ],
+     "request": {
+      "method": "PUT",
+      "header": [
+       {
+        "key": "Content-Type",
+        "value": "application/json"
+       }
+      ],
+      "url": {
+       "raw": "{{baseUrl}}/tasks/{{taskId}}",
+       "host": [
+        "{{baseUrl}}"
+       ],
+       "path": [
+        "tasks",
+        "{{taskId}}"
+       ]
+      },
+      "body": {
+       "mode": "raw",
+       "raw": "{\n  \"status\": \"pending\"\n}"
+      }
+     }
+    },
+    {
+     "name": "Eliminar tarea",
+     "event": [
+      {
+       "listen": "test",
+       "script": {
+        "type": "text/javascript",
+        "exec": [
+         "pm.test('Código 204', () => pm.response.to.have.status(204));"
+        ]
+       }
+      }
+     ],
+     "request": {
+      "method": "DELETE",
+      "header": [
+       {
+        "key": "Content-Type",
+        "value": "application/json"
+       }
+      ],
+      "url": {
+       "raw": "{{baseUrl}}/tasks/{{taskId}}",
+       "host": [
+        "{{baseUrl}}"
+       ],
+       "path": [
+        "tasks",
+        "{{taskId}}"
+       ]
+      }
+     }
+    }
+   ]
+  },
+  {
+   "name": "Ciudad",
+   "item": [
+    {
+     "name": "Obtener ciudad",
+     "event": [
+      {
+       "listen": "test",
+       "script": {
+        "type": "text/javascript",
+        "exec": [
+         "pm.test('Código 200', () => pm.response.to.have.status(200));"
+        ]
+       }
+      }
+     ],
+     "request": {
+      "method": "GET",
+      "header": [
+       {
+        "key": "Content-Type",
+        "value": "application/json"
+       }
+      ],
+      "url": {
+       "raw": "{{baseUrl}}/city",
+       "host": [
+        "{{baseUrl}}"
+       ],
+       "path": [
+        "city"
+       ]
+      }
+     }
+    },
+    {
+     "name": "Reiniciar ciudad",
+     "event": [
+      {
+       "listen": "test",
+       "script": {
+        "type": "text/javascript",
+        "exec": [
+         "pm.test('Código 200', () => pm.response.to.have.status(200));"
+        ]
+       }
+      }
+     ],
+     "request": {
+      "method": "PUT",
+      "header": [
+       {
+        "key": "Content-Type",
+        "value": "application/json"
+       }
+      ],
+      "url": {
+       "raw": "{{baseUrl}}/city",
+       "host": [
+        "{{baseUrl}}"
+       ],
+       "path": [
+        "city"
+       ]
+      },
+      "body": {
+       "mode": "raw",
+       "raw": "{\n  \"cells\": [\n    \"\",\n    \"\",\n    \"\",\n    \"\",\n    \"\",\n    \"\",\n    \"\",\n    \"\",\n    \"\",\n    \"\",\n    \"\",\n    \"\",\n    \"\",\n    \"\",\n    \"\",\n    \"\",\n    \"\",\n    \"\",\n    \"\",\n    \"\",\n    \"\",\n    \"\",\n    \"\",\n    \"\",\n    \"\",\n    \"\",\n    \"\",\n    \"\",\n    \"\",\n    \"\",\n    \"\",\n    \"\",\n    \"\",\n    \"\",\n    \"\",\n    \"\",\n    \"\",\n    \"\",\n    \"\",\n    \"\",\n    \"\",\n    \"\",\n    \"\",\n    \"\",\n    \"\",\n    \"\",\n    \"\",\n    \"\",\n    \"\",\n    \"\"\n  ],\n  \"lost\": 0\n}"
+      }
+     }
+    }
+   ]
+  },
+  {
+   "name": "Ánimo",
+   "item": [
+    {
+     "name": "Registrar ánimo y obtener frase",
+     "event": [
+      {
+       "listen": "test",
+       "script": {
+        "type": "text/javascript",
+        "exec": [
+         "pm.test('Código 201', () => pm.response.to.have.status(201));"
+        ]
+       }
+      }
+     ],
+     "request": {
+      "method": "POST",
+      "header": [
+       {
+        "key": "Content-Type",
+        "value": "application/json"
+       }
+      ],
+      "url": {
+       "raw": "{{baseUrl}}/moods",
+       "host": [
+        "{{baseUrl}}"
+       ],
+       "path": [
+        "moods"
+       ]
+      },
+      "body": {
+       "mode": "raw",
+       "raw": "{\n  \"mood\": \"motivado\"\n}"
+      }
+     }
+    },
+    {
+     "name": "Ánimo no válido (error)",
+     "event": [
+      {
+       "listen": "test",
+       "script": {
+        "type": "text/javascript",
+        "exec": [
+         "pm.test('Código 400', () => pm.response.to.have.status(400));"
+        ]
+       }
+      }
+     ],
+     "request": {
+      "method": "POST",
+      "header": [
+       {
+        "key": "Content-Type",
+        "value": "application/json"
+       }
+      ],
+      "url": {
+       "raw": "{{baseUrl}}/moods",
+       "host": [
+        "{{baseUrl}}"
+       ],
+       "path": [
+        "moods"
+       ]
+      },
+      "body": {
+       "mode": "raw",
+       "raw": "{\n  \"mood\": \"enfadado\"\n}"
+      }
+     }
+    },
+    {
+     "name": "Ánimo de hoy",
+     "event": [
+      {
+       "listen": "test",
+       "script": {
+        "type": "text/javascript",
+        "exec": [
+         "pm.test('Código 200', () => pm.response.to.have.status(200));"
+        ]
+       }
+      }
+     ],
+     "request": {
+      "method": "GET",
+      "header": [
+       {
+        "key": "Content-Type",
+        "value": "application/json"
+       }
+      ],
+      "url": {
+       "raw": "{{baseUrl}}/moods/today",
+       "host": [
+        "{{baseUrl}}"
+       ],
+       "path": [
+        "moods",
+        "today"
+       ]
+      }
+     }
+    },
+    {
+     "name": "Historial",
+     "event": [
+      {
+       "listen": "test",
+       "script": {
+        "type": "text/javascript",
+        "exec": [
+         "pm.test('Código 200', () => pm.response.to.have.status(200));"
+        ]
+       }
+      }
+     ],
+     "request": {
+      "method": "GET",
+      "header": [
+       {
+        "key": "Content-Type",
+        "value": "application/json"
+       }
+      ],
+      "url": {
+       "raw": "{{baseUrl}}/moods",
+       "host": [
+        "{{baseUrl}}"
+       ],
+       "path": [
+        "moods"
+       ]
+      }
+     }
+    }
+   ]
+  },
+  {
+   "name": "Frases",
+   "item": [
+    {
+     "name": "Listar mis frases",
+     "event": [
+      {
+       "listen": "test",
+       "script": {
+        "type": "text/javascript",
+        "exec": [
+         "pm.test('Código 200', () => pm.response.to.have.status(200));"
+        ]
+       }
+      }
+     ],
+     "request": {
+      "method": "GET",
+      "header": [
+       {
+        "key": "Content-Type",
+        "value": "application/json"
+       }
+      ],
+      "url": {
+       "raw": "{{baseUrl}}/phrases",
+       "host": [
+        "{{baseUrl}}"
+       ],
+       "path": [
+        "phrases"
+       ]
+      }
+     }
+    },
+    {
+     "name": "Listar con las del sistema",
+     "event": [
+      {
+       "listen": "test",
+       "script": {
+        "type": "text/javascript",
+        "exec": [
+         "pm.test('Código 200', () => pm.response.to.have.status(200));"
+        ]
+       }
+      }
+     ],
+     "request": {
+      "method": "GET",
+      "header": [
+       {
+        "key": "Content-Type",
+        "value": "application/json"
+       }
+      ],
+      "url": {
+       "raw": "{{baseUrl}}/phrases?includeDefaults=true",
+       "host": [
+        "{{baseUrl}}"
+       ],
+       "path": [
+        "phrases?includeDefaults=true"
+       ]
+      }
+     }
+    },
+    {
+     "name": "Crear frase",
+     "event": [
+      {
+       "listen": "test",
+       "script": {
+        "type": "text/javascript",
+        "exec": [
+         "pm.test('Código 201', () => pm.response.to.have.status(201));",
+         "pm.collectionVariables.set('phraseId', pm.response.json()._id);"
+        ]
+       }
+      }
+     ],
+     "request": {
+      "method": "POST",
+      "header": [
+       {
+        "key": "Content-Type",
+        "value": "application/json"
+       }
+      ],
+      "url": {
+       "raw": "{{baseUrl}}/phrases",
+       "host": [
+        "{{baseUrl}}"
+       ],
+       "path": [
+        "phrases"
+       ]
+      },
+      "body": {
+       "mode": "raw",
+       "raw": "{\n  \"text\": \"Hoy sí puedo.\",\n  \"mood\": \"cansado\"\n}"
+      }
+     }
+    },
+    {
+     "name": "Editar frase",
+     "event": [
+      {
+       "listen": "test",
+       "script": {
+        "type": "text/javascript",
+        "exec": [
+         "pm.test('Código 200', () => pm.response.to.have.status(200));"
+        ]
+       }
+      }
+     ],
+     "request": {
+      "method": "PUT",
+      "header": [
+       {
+        "key": "Content-Type",
+        "value": "application/json"
+       }
+      ],
+      "url": {
+       "raw": "{{baseUrl}}/phrases/{{phraseId}}",
+       "host": [
+        "{{baseUrl}}"
+       ],
+       "path": [
+        "phrases",
+        "{{phraseId}}"
+       ]
+      },
+      "body": {
+       "mode": "raw",
+       "raw": "{\n  \"text\": \"Hoy sí puedo con una cosa.\"\n}"
+      }
+     }
+    },
+    {
+     "name": "Eliminar frase",
+     "event": [
+      {
+       "listen": "test",
+       "script": {
+        "type": "text/javascript",
+        "exec": [
+         "pm.test('Código 204', () => pm.response.to.have.status(204));"
+        ]
+       }
+      }
+     ],
+     "request": {
+      "method": "DELETE",
+      "header": [
+       {
+        "key": "Content-Type",
+        "value": "application/json"
+       }
+      ],
+      "url": {
+       "raw": "{{baseUrl}}/phrases/{{phraseId}}",
+       "host": [
+        "{{baseUrl}}"
+       ],
+       "path": [
+        "phrases",
+        "{{phraseId}}"
+       ]
+      }
+     }
+    }
+   ]
+  }
+ ]
+}
