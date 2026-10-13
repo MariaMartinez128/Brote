@@ -38,6 +38,7 @@ Node.js · Express 4 · MongoDB con Mongoose · HTML, CSS y JavaScript nativos (
 2. Copia `.env.example` a `.env` y completa tus valores:
    ```env
    MONGO_URI=mongodb+srv://USUARIO:PASSWORD@cluster0.xxxxx.mongodb.net/Brote
+   JWT_SECRET=un-texto-largo-y-aleatorio
    PORT=3000
    ```
 3. Arranca la aplicación y abre <http://localhost:3000>:
@@ -46,7 +47,7 @@ Node.js · Express 4 · MongoDB con Mongoose · HTML, CSS y JavaScript nativos (
    npm run dev        # recarga automática al editar
    ```
 
-Al arrancar por primera vez se crea el usuario, su mundo y las frases motivacionales de ejemplo. Si venías de una versión anterior con una única ciudad, esta se migra sola al escenario *Ciudad*.
+Al arrancar se crean las frases motivacionales de ejemplo. Regístrate desde la pantalla de acceso para empezar.
 
 ### Variables de entorno
 
@@ -54,7 +55,9 @@ Al arrancar por primera vez se crea el usuario, su mundo y las frases motivacion
 |---|---|---|
 | `MONGO_URI` | Sí | Cadena de conexión a MongoDB |
 | `PORT` | No | Puerto del servidor (por defecto `3000`) |
-| `EMAIL_USER`, `EMAIL_PASS` | Solo con registro por correo | Cuenta de Gmail que envía el correo de confirmación |
+| `JWT_SECRET` | Sí | Texto aleatorio para firmar las sesiones |
+| `ADMIN_EMAIL` | No | Email que recibe el rol admin (si no, el primer registrado) |
+| `EMAIL_USER`, `EMAIL_PASS` | No; solo para confirmar por correo | Cuenta de Gmail que envía el correo de confirmación |
 | `BASE_URL` | No | URL pública usada en el enlace de confirmación (por defecto `http://localhost:3000`) |
 
 ## Cómo se juega
@@ -107,7 +110,7 @@ Brote/
 │   ├── scenarios.js     # Catálogo de escenarios (configuración visual)
 │   ├── city.js          # Lógica del mundo: crecer, destruir y deshacer
 │   └── email.js         # Correo de confirmación de cuenta
-├── models/index.js      # Esquemas: User, Task, WorldState, Phrase, MoodLog
+├── models/index.js      # Esquemas: User (con password/rol), Task, WorldState, Phrase, MoodLog
 ├── routes/              # user, tasks, city, scenarios, moods, phrases, auth, admin
 ├── middleware/auth.js   # Sesión y control de rol administrador
 ├── public/index.html    # Cliente (HTML + CSS + JS)
@@ -115,24 +118,30 @@ Brote/
 └── spec/                # Tests con Jasmine
 ```
 
-## Tests
-
-```bash
-npm test
-```
-
 ## Postman
 
 Importa `postman/CityFocus.postman_collection.json`. La variable `baseUrl` apunta a `http://localhost:3000/api`; cámbiala por `https://TU-APP.onrender.com/api` para probar el despliegue.
 
-## Desplegar (Render + MongoDB Atlas)
+## Registro e inicio de sesión
 
-- **Build Command:** `npm install`
-- **Start Command:** `node server.js`
-- **Variable de entorno:** `MONGO_URI`
-- En Atlas, permite el acceso desde `0.0.0.0/0` (*Network Access*).
+- **Registro** (`POST /api/auth/register`): nombre, email y contraseña (mínimo 8 caracteres). La contraseña se guarda con **bcrypt**.
+- **Confirmación por correo** (`GET /api/auth/confirmar/:email/:key`): solo si `EMAIL_USER` y `EMAIL_PASS` están definidos; si no, la cuenta queda confirmada al instante.
+- **Login** (`POST /api/auth/login`): crea una cookie `httpOnly` con un **JWT** firmado (`JWT_SECRET`) válido 7 días. `POST /api/auth/logout` la borra y `GET /api/auth/me` devuelve el usuario actual.
+- **Aislamiento:** todas las rutas `/api/*` (tareas, mundo, frases, ánimo…) exigen sesión y solo devuelven los datos del usuario autenticado.
+- **Roles:** `admin` (el email de `ADMIN_EMAIL`, o el primer registrado) puede listar (`GET /api/admin/usuarios`) y borrar usuarios; un usuario normal solo puede borrar su propia cuenta. Al borrar un usuario se borran también sus datos.
 
-## Estado y próximos pasos
+## Desplegar en Google Cloud Run + MongoDB Atlas
 
-- Por ahora la aplicación funciona con un único usuario y sin inicio de sesión. Las rutas de registro, confirmación por correo y panel de administración (`/api/auth`, `/api/admin`) están escritas pero todavía sin activar.
-- Ideas pendientes: desbloquear escenarios al completar cierto número de tareas, crecimiento por etapas (🌱 → 🌿 → 🌳) y estadísticas semanales.
+1. En Atlas: crea un clúster gratuito (M0), un usuario de base de datos, y en *Network Access* permite `0.0.0.0/0`.
+2. Despliega desde esta carpeta:
+   ```bash
+   gcloud run deploy brote --source . --region europe-west1 --allow-unauthenticated \
+     --set-env-vars "MONGO_URI=...,JWT_SECRET=...,ADMIN_EMAIL=...,BASE_URL=https://TU-URL.run.app"
+   ```
+3. Si activas el correo, añade también `EMAIL_USER` y `EMAIL_PASS`.
+
+(Alternativa: Render con *Build* `npm install`, *Start* `node server.js` y las mismas variables.)
+
+## Tests
+
+`npm test` lanza los tests de modelos y los de autenticación. Estos últimos usan MongoDB en memoria (se descarga la primera vez) o la base indicada en `MONGO_TEST_URI`.

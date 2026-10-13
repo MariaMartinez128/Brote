@@ -73,13 +73,45 @@ main{padding:2rem 2.5rem;max-width:1100px;width:100%}
 .phrase span{flex:1}
 .phrase button{padding:.35rem .7rem;font-size:.85rem}
 .pgrid{display:grid;grid-template-columns:1fr 1fr;gap:.6rem}
+/* acceso */
+#auth{min-height:100vh;display:flex;align-items:center;justify-content:center;padding:1rem}
+#auth .box{background:var(--panel);border:1.5px solid var(--line);border-radius:16px;padding:2rem;width:100%;max-width:400px}
+#auth h1{font-size:2rem;margin-bottom:.3rem}
+#auth .tabs{display:flex;gap:.5rem;margin:1.2rem 0 .5rem}
+#auth .tabs button{flex:1;background:transparent;color:var(--mute);border:1.5px solid var(--line)}
+#auth .tabs button.on{background:var(--accent);color:var(--ink);border-color:var(--accent)}
+#auth form button[type=submit]{width:100%;margin-top:1.2rem}
+#authMsg{margin-top:.9rem;font-size:.9rem}
+.urow{display:flex;align-items:center;gap:.8rem;padding:.6rem 0;border-bottom:1px solid var(--line)}
+.urow .info{flex:1;min-width:0;overflow-wrap:anywhere}
+.card{background:var(--panel);border:1.5px solid var(--line);border-radius:14px;padding:1.2rem}
 @media(prefers-reduced-motion:reduce){*{animation:none!important;transition:none!important}}
 </style>
 </head>
 <body>
 
+<!-- ACCESO -->
+<div id="auth" class="hidden">
+  <div class="box">
+    <h1>🌱 Brote</h1>
+    <p class="muted">Productividad gamificada: completa tareas y haz crecer tu mundo.</p>
+    <div class="tabs" role="tablist">
+      <button type="button" data-t="login" class="on">Iniciar sesión</button>
+      <button type="button" data-t="register">Registrarse</button>
+    </div>
+    <form id="authForm">
+      <div id="nameRow" class="hidden"><label for="aName">Nombre</label><input id="aName" autocomplete="name" maxlength="60"></div>
+      <label for="aMail">Correo electrónico</label><input id="aMail" type="email" required autocomplete="email">
+      <label for="aPass">Contraseña</label><input id="aPass" type="password" required minlength="8" autocomplete="current-password">
+      <small class="muted" id="passHint" style="display:none">Mínimo 8 caracteres.</small>
+      <button type="submit" id="authBtn">Entrar</button>
+    </form>
+    <p id="authMsg" role="status"></p>
+  </div>
+</div>
+
 <!-- APLICACIÓN -->
-<div id="app">
+<div id="app" class="hidden">
   <nav aria-label="Principal">
     <div class="logo" id="logo">🌱 Brote</div>
     <button data-v="dash" class="on">Panel</button>
@@ -89,7 +121,8 @@ main{padding:2rem 2.5rem;max-width:1100px;width:100%}
     <button data-v="scen">Escenarios</button>
     <button data-v="mood">Ánimo</button>
     <button data-v="cfg">Configuración</button>
-    <div class="who"><span id="who"></span></div>
+    <button data-v="admin" id="navAdmin" class="hidden">Usuarios (admin)</button>
+    <div class="who"><span id="who"></span><br><button class="alt" id="logout" style="margin-top:.6rem;color:#fff;border-color:#9fb0aa;padding:.4rem .8rem;font-size:.85rem">Cerrar sesión</button></div>
   </nav>
 
   <main>
@@ -175,7 +208,7 @@ main{padding:2rem 2.5rem;max-width:1100px;width:100%}
         <h3>Perfil</h3>
         <div class="pgrid">
           <div><label for="pfName">Nombre</label><input id="pfName"></div>
-          <div><label for="pfMail">Correo</label><input id="pfMail" type="email"></div>
+          <div><label for="pfMail">Correo</label><input id="pfMail" type="email" readonly></div>
         </div>
         <button id="pfSave" style="margin-top:1rem">Guardar perfil</button>
       </div>
@@ -188,6 +221,17 @@ main{padding:2rem 2.5rem;max-width:1100px;width:100%}
         </div>
         <div id="phList"></div>
       </div>
+      <div class="card" style="margin-top:1.2rem">
+        <h3>Mi cuenta</h3>
+        <p class="muted">Eliminar tu cuenta borra también tus tareas, mundos y frases. No se puede deshacer.</p>
+        <button class="bad" id="delAcc" style="margin-top:.8rem">Eliminar mi cuenta</button>
+      </div>
+    </section>
+
+    <!-- ADMIN -->
+    <section id="v-admin" class="hidden">
+      <h2>Usuarios registrados</h2>
+      <div class="card" id="userList"></div>
     </section>
   </main>
 </div>
@@ -206,7 +250,11 @@ const esc = s => String(s).replace(/[&<>"]/g, c => ({'&':'&amp;','<':'&lt;','>':
 /* ============ API ============ */
 async function call(method, path, body){
   const r = await fetch('/api'+path, { method, headers:{'Content-Type':'application/json'}, body: body===undefined ? undefined : JSON.stringify(body) });
-  if(!r.ok){ const e = await r.json().catch(()=>({})); throw new Error(e.error || 'Error '+r.status); }
+  if(!r.ok){
+    const e = await r.json().catch(()=>({}));
+    if(r.status === 401 && !path.startsWith('/auth/')){ showAuth(); throw new Error(e.error || 'Sesión caducada'); }
+    throw new Error(e.error || 'Error '+r.status);
+  }
   return r.status === 204 ? null : r.json();
 }
 function toast(msg){
@@ -231,6 +279,7 @@ function show(v){
   $$('main > section').forEach(s => s.classList.add('hidden'));
   $('#v-'+v).classList.remove('hidden');
   $$('nav button[data-v]').forEach(b => b.classList.toggle('on', b.dataset.v === v));
+  if(v === 'admin') loadUsers().catch(e => toast(e.message));
   renderAll();
 }
 $$('nav button[data-v]').forEach(b => b.onclick = () => show(b.dataset.v));
@@ -376,7 +425,7 @@ $('#phList').onclick = safe(async e => {
   renderPhrases();
 });
 $('#pfSave').onclick = safe(async () => {
-  const u = await call('PUT','/user',{ name:$('#pfName').value, email:$('#pfMail').value });
+  const u = await call('PUT','/user',{ name:$('#pfName').value });
   state.user = u; $('#who').textContent = u.name; renderAll();
 });
 
@@ -387,9 +436,72 @@ function renderAll(){
   $('#pfName').value = state.user.name; $('#pfMail').value = state.user.email;
   if(state.quote) $('#moodQuote').textContent = state.quote;
 }
+/* ============ ACCESO (login / registro / sesión) ============ */
+let authMode = 'login';
+function showAuth(){
+  $('#app').classList.add('hidden'); $('#auth').classList.remove('hidden');
+  state.user = null; clearInterval(tick); tick = null; document.title = 'Brote';
+}
+function setAuthMode(m){
+  authMode = m;
+  $$('#auth .tabs button').forEach(b => b.classList.toggle('on', b.dataset.t === m));
+  $('#nameRow').classList.toggle('hidden', m !== 'register');
+  $('#passHint').style.display = m === 'register' ? 'block' : 'none';
+  $('#aPass').autocomplete = m === 'register' ? 'new-password' : 'current-password';
+  $('#authBtn').textContent = m === 'register' ? 'Crear cuenta' : 'Entrar';
+  $('#authMsg').textContent = '';
+}
+$$('#auth .tabs button').forEach(b => b.onclick = () => setAuthMode(b.dataset.t));
+function authMsg(t, ok){ const m = $('#authMsg'); m.textContent = t; m.style.color = ok ? 'var(--ok)' : 'var(--bad)'; }
+$('#authForm').onsubmit = async e => {
+  e.preventDefault();
+  const body = { email:$('#aMail').value, password:$('#aPass').value };
+  if(authMode === 'register') body.name = $('#aName').value;
+  $('#authBtn').disabled = true;
+  try{
+    const r = await call('POST', '/auth/' + authMode, body);
+    if(authMode === 'register'){
+      authMsg(r.mensaje, true);
+      if(r.confirmada){ setAuthMode('login'); authMsg(r.mensaje, true); }
+      $('#aPass').value = '';
+    } else { $('#aPass').value = ''; await enterApp(); }
+  }catch(err){ authMsg(err.message === 'Failed to fetch' ? 'No se pudo conectar con el servidor.' : err.message, false); }
+  finally{ $('#authBtn').disabled = false; }
+};
+$('#logout').onclick = safe(async () => { await call('POST','/auth/logout'); showAuth(); setAuthMode('login'); });
+$('#delAcc').onclick = safe(async () => {
+  if(!confirm('¿Seguro que quieres eliminar tu cuenta y todos tus datos?')) return;
+  await call('DELETE','/admin/usuarios/'+state.me.id);
+  showAuth(); setAuthMode('login'); authMsg('Tu cuenta ha sido eliminada.', true);
+});
+
+/* ============ ADMIN ============ */
+async function loadUsers(){
+  const us = await call('GET','/admin/usuarios');
+  $('#userList').innerHTML = us.map(u => `
+    <div class="urow"><div class="info"><b>${esc(u.name)}</b> <span class="tag">${u.role}</span>
+      ${u.confirmed ? '' : '<span class="tag" style="background:#f3d9a8">sin confirmar</span>'}<br><span class="muted">${esc(u.email)}</span></div>
+      ${u._id === state.me.id ? '<span class="muted">(tú)</span>' : `<button class="bad" data-id="${u._id}">Eliminar</button>`}</div>`).join('') || '<p class="muted">Sin usuarios.</p>';
+}
+$('#userList').onclick = safe(async e => {
+  const b = e.target.closest('button'); if(!b || !confirm('¿Eliminar este usuario y todos sus datos?')) return;
+  await call('DELETE','/admin/usuarios/'+b.dataset.id); await loadUsers();
+});
+
+async function enterApp(){
+  state.me = (await call('GET','/auth/me')).user;
+  await load(); setMode('work');
+  $('#auth').classList.add('hidden'); $('#app').classList.remove('hidden');
+  $('#navAdmin').classList.toggle('hidden', state.user.role !== 'admin');
+  $('#who').textContent = state.user.name; show('dash');
+}
 (async () => {
-  try{ await load(); setMode('work'); $('#who').textContent = state.user.name; show('dash'); }
-  catch(e){ toast('No se pudo conectar con el servidor: ' + e.message); }
+  try{
+    const r = await fetch('/api/auth/me');
+    if(!r.ok){ showAuth(); return; }
+    state.me = (await r.json()).user;
+    await enterApp();
+  }catch(e){ showAuth(); authMsg('No se pudo conectar con el servidor: ' + e.message, false); }
 })();
 </script>
 </body>

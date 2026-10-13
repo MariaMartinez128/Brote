@@ -4,18 +4,17 @@ const wrap = require('../wrap');
 const { SCENARIOS } = require('../lib/scenarios');
 const { getWorld } = require('../lib/city');
 const today = () => new Date().toISOString().slice(0, 10);
-const out = u => ({ name: u.name, email: u.email, scenario: u.scenario, pomodoro: u.pomodoro, sessions: u.sessions.date === today() ? u.sessions.count : 0 });
+const out = u => ({ name: u.name, email: u.email, role: u.role, scenario: u.scenario, pomodoro: u.pomodoro, sessions: u.sessions.date === today() ? u.sessions.count : 0 });
 
 r.get('/', wrap(async (req, res) => res.json(out(await User.findById(req.userId)))));
 
 r.put('/', wrap(async (req, res) => {
   const u = await User.findById(req.userId);
-  const { name, email, pomodoro } = req.body;
+  const { name, pomodoro } = req.body;   // el email no se puede cambiar (está confirmado por correo)
   if (name !== undefined) {
     if (!String(name).trim()) return res.status(400).json({ error: 'El nombre no puede estar vacío' });
     u.name = String(name).trim();
   }
-  if (email !== undefined) u.email = String(email).trim();
   if (pomodoro) {
     for (const k of ['work', 'short', 'long']) {
       if (pomodoro[k] === undefined) continue;

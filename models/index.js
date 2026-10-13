@@ -7,11 +7,14 @@ const STATUS = ['pending', 'done', 'failed'];
 const userRef = { type: Schema.Types.ObjectId, ref: 'User', index: true };
 const mins = d => ({ type: Number, default: d, min: 1, max: 180 });
 
-// Users: de momento hay un único usuario (sin login). Para añadir login más adelante
-// bastará con añadir el campo password (hash) y filtrar por el usuario autenticado.
+// Usuarios con registro e inicio de sesión. La contraseña se guarda siempre con hash (bcrypt).
 const User = model('User', new Schema({
   name: { type: String, default: 'Usuario', trim: true },
-  email: { type: String, default: '', trim: true, lowercase: true },
+  email: { type: String, required: [true, 'El email es obligatorio'], unique: true, trim: true, lowercase: true },
+  password: { type: String, required: true },
+  role: { type: String, enum: ['user', 'admin'], default: 'user' },
+  confirmed: { type: Boolean, default: false },   // se pone a true al pulsar el enlace del correo
+  key: { type: String, default: '' },             // clave aleatoria de confirmación
   scenario: { type: String, enum: SCENARIO_IDS, default: DEFAULT_SCENARIO },
   pomodoro: { work: mins(25), short: mins(5), long: mins(15) },
   sessions: { date: { type: String, default: '' }, count: { type: Number, default: 0 } }

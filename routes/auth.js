@@ -1,86 +1,77 @@
 const r = require('express').Router();
-const bcrypt = require('bcrypt');
+const crypto = require('crypto');
+const bcrypt = require('bcryptjs');
+const rateLimit = require('express-rate-limit');
 const { User } = require('../models');
 const { getWorld } = require('../lib/city');
-const { enviarEmailConfirmacion } = require('../lib/email');
+const { enviarEmailConfirmacion, emailConfigurado } = require('../lib/email');
+const { verificarSesion, iniciarSesion, cerrarSesion } = require('../middleware/auth');
 const wrap = require('../wrap');
 
-// --- REGISTRO LOCAL ---
-r.post('/register', wrap(async (req, res) => {
+const EMAIL_RE = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+const limite = rateLimit({ windowMs: 15 * 60 * 1000, limit: 50, standardHeaders: true, legacyHeaders: false,
+  message: { error: 'Demasiados intentos. Prueba de nuevo en unos minutos.' } });
+const publico = u => ({ id: u._id, name: u.name, email: u.email, role: u.role });
+
+// --- REGISTRO ---
+r.post('/register', limite, wrap(async (req, res) => {
   const { name, email, password } = req.body;
   if (!email || !password) return res.status(400).json({ error: 'Faltan campos obligatorios' });
+  const mail = String(email).trim().toLowerCase();
+  if (!EMAIL_RE.test(mail)) return res.status(400).json({ error: 'El email no es válido' });
+  if (String(password).length < 8) return res.status(400).json({ error: 'La contraseña debe tener al menos 8 caracteres' });
+  if (await User.exists({ email: mail })) return res.status(400).json({ error: 'El email ya está registrado' });
 
-  const emailTrim = String(email).trim().toLowerCase();
-  const existe = await User.findOne({ email: emailTrim });
-  if (existe) return res.status(400).json({ error: 'El email ya está registrado' });
+  // Administrador: el email indicado en ADMIN_EMAIL; si no hay ADMIN_EMAIL, el primer usuario registrado
+  const admin = process.env.ADMIN_EMAIL
+    ? mail === process.env.ADMIN_EMAIL.trim().toLowerCase()
+    : (await User.countDocuments()) === 0;
+  const conCorreo = emailConfigurado();
+  const key = crypto.randomBytes(24).toString('hex');
 
-  // Cifrar la contraseña con bcrypt (seguridad obligatoria)
-  const hashedPassword = await bcrypt.hash(password, 10);
-  const key = Date.now().toString();
-
-  // El primer usuario registrado o si se especifica puede ser admin, por defecto 'user'
-  const totalUsuarios = await User.countDocuments();
-  const role = totalUsuarios === 0 ? 'admin' : 'user';
-
-  const newUser = await User.create({
-    name: name ? String(name).trim() : 'Usuario',
-    email: emailTrim,
-    password: hashedPassword,
-    role,
-    confirmed: false, // Requiere confirmación por correo
-    key
+  const user = await User.create({
+    name: name && String(name).trim() ? String(name).trim().slice(0, 60) : 'Usuario',
+    email: mail,
+    password: await bcrypt.hash(String(password), 10),
+    role: admin ? 'admin' : 'user',
+    confirmed: !conCorreo,          // sin correo configurado, la cuenta queda confirmada al instante
+    key: conCorreo ? key : ''
   });
+  await getWorld(user._id, user.scenario);
 
-  // Crear el mundo inicial para este usuario
-  await getWorld(newUser._id, newUser.scenario);
-
-  // Enviar correo de confirmación
-  try {
-    await enviarEmailConfirmacion(emailTrim, key);
-  } catch (err) {
-    console.error('Error al enviar correo:', err);
+  if (!conCorreo) return res.status(201).json({ mensaje: 'Cuenta creada. Ya puedes iniciar sesión.', confirmada: true });
+  try { await enviarEmailConfirmacion(mail, key); }
+  catch (err) {
+    console.error('Error al enviar el correo de confirmación:', err.message);
+    await User.deleteOne({ _id: user._id });          // evita cuentas imposibles de confirmar
+    return res.status(502).json({ error: 'No se pudo enviar el correo de confirmación. Inténtalo más tarde.' });
   }
-
-  res.json({ mensaje: 'Usuario registrado. Revisa tu correo para confirmar la cuenta.' });
+  res.status(201).json({ mensaje: 'Cuenta creada. Revisa tu correo para confirmarla.', confirmada: false });
 }));
 
-// --- CONFIRMAR CUENTA POR CORREO ---
+// --- CONFIRMAR CUENTA (enlace del correo) ---
 r.get('/confirmar/:email/:key', wrap(async (req, res) => {
-  const { email, key } = req.params;
-  const user = await User.findOne({ email, key, confirmed: false });
-
-  if (!user) return res.status(400).json({ error: 'Enlace de confirmación no válido o ya utilizado' });
-
-  user.confirmed = true;
-  user.key = ''; // Limpiamos la clave
+  const user = await User.findOne({ email: String(req.params.email).toLowerCase(), key: req.params.key, confirmed: false });
+  if (!user || !req.params.key) return res.status(400).send('<h2>Enlace de confirmación no válido o ya utilizado</h2><p><a href="/">Ir a Brote</a></p>');
+  user.confirmed = true; user.key = '';
   await user.save();
-
-  res.send('<h2>¡Cuenta confirmada con éxito! Ya puedes iniciar sesión en la aplicación.</h2>');
+  res.send('<h2>¡Cuenta confirmada con éxito! 🌱</h2><p><a href="/">Iniciar sesión en Brote</a></p>');
 }));
 
 // --- INICIO DE SESIÓN ---
-r.post('/login', wrap(async (req, res) => {
+r.post('/login', limite, wrap(async (req, res) => {
   const { email, password } = req.body;
   if (!email || !password) return res.status(400).json({ error: 'Faltan campos obligatorios' });
-
   const user = await User.findOne({ email: String(email).trim().toLowerCase() });
-  if (!user) return res.status(400).json({ error: 'Credenciales incorrectas' });
-
-  // Comprobar si ha confirmado la cuenta por correo
-  if (!user.confirmed) return res.status(403).json({ error: 'Debes confirmar tu cuenta mediante el correo electrónico antes de iniciar sesión' });
-
-  // Verificar contraseña con bcrypt
-  const passwordMatch = await bcrypt.compare(password, user.password);
-  if (!passwordMatch) return res.status(400).json({ error: 'Credenciales incorrectas' });
-
-  // La aplicación usa actualmente un único usuario activo en app.locals.
-  // Mantenerlo aquí hace que las siguientes peticiones utilicen la cuenta autenticada.
-  appLocalUserId = user._id; // O asignarlo a req.session / app.locals
-
-  res.json({ 
-    mensaje: 'Inicio de sesión correcto', 
-    user: { id: user._id, name: user.name, email: user.email, role: user.role } 
-  });
+  if (!user || !(await bcrypt.compare(String(password), user.password)))
+    return res.status(400).json({ error: 'Credenciales incorrectas' });
+  if (!user.confirmed) return res.status(403).json({ error: 'Debes confirmar tu cuenta con el enlace que te enviamos por correo' });
+  iniciarSesion(res, user);
+  res.json({ mensaje: 'Inicio de sesión correcto', user: publico(user) });
 }));
+
+// --- CERRAR SESIÓN / QUIÉN SOY ---
+r.post('/logout', (req, res) => { cerrarSesion(res); res.json({ mensaje: 'Sesión cerrada' }); });
+r.get('/me', verificarSesion, (req, res) => res.json({ user: publico(req.user) }));
 
 module.exports = r;

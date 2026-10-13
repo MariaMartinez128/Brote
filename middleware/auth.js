@@ -1,34 +1,37 @@
+const jwt = require('jsonwebtoken');
 const { User } = require('../models');
 
-// Middleware para verificar si el usuario ha iniciado sesión (simulado o mediante cabecera/sesión)
-const verificarSesion = async (req, res, next) => {
-  try {
-    // Si usas app.locals o una cabecera personalizada para el usuario actual:
-    const userId = req.headers['x-user-id'] || req.app.locals.userId;
-    if (!userId) {
-      return res.status(401).json({ error: 'Acceso no autorizado. Inicia sesión.' });
-    }
-    
-    const user = await User.findById(userId);
-    if (!user) {
-      return res.status(401).json({ error: 'Usuario no encontrado.' });
-    }
+const COOKIE = 'brote_token';
+const secret = () => process.env.JWT_SECRET;
+const isProd = () => process.env.NODE_ENV === 'production';
 
-    req.user = user; // Adjuntamos el usuario a la petición
+// Crea la cookie de sesión (JWT firmado, httpOnly: el JavaScript del navegador no puede leerla)
+function iniciarSesion(res, user) {
+  const token = jwt.sign({ id: user._id.toString() }, secret(), { expiresIn: '7d' });
+  res.cookie(COOKIE, token, { httpOnly: true, sameSite: 'lax', secure: isProd(), maxAge: 7 * 24 * 3600 * 1000 });
+}
+const cerrarSesion = res => res.clearCookie(COOKIE, { httpOnly: true, sameSite: 'lax', secure: isProd() });
+
+// Exige sesión válida; deja el usuario en req.user y su id en req.userId
+async function verificarSesion(req, res, next) {
+  try {
+    const token = req.cookies && req.cookies[COOKIE];
+    if (!token) return res.status(401).json({ error: 'Inicia sesión para continuar' });
+    let id;
+    try { id = jwt.verify(token, secret()).id; }
+    catch { return res.status(401).json({ error: 'Sesión caducada. Vuelve a iniciar sesión' }); }
+    const user = await User.findById(id);
+    if (!user) return res.status(401).json({ error: 'Usuario no encontrado' });
+    req.user = user;
     req.userId = user._id;
     next();
-  } catch (err) {
-    res.status(500).json({ error: 'Error de autenticación' });
-  }
-};
+  } catch (err) { next(err); }
+}
 
-// Middleware para restringir solo a administradores
-const soloAdmin = (req, res, next) => {
-  if (req.user && req.user.role === 'admin') {
-    next();
-  } else {
-    res.status(403).json({ error: 'Acceso denegado. Se requieren privilegios de administrador.' });
-  }
-};
+// Restringe a administradores (usar después de verificarSesion)
+function soloAdmin(req, res, next) {
+  if (req.user && req.user.role === 'admin') return next();
+  res.status(403).json({ error: 'Acceso denegado. Se requieren privilegios de administrador.' });
+}
 
-module.exports = { verificarSesion, soloAdmin };
+module.exports = { verificarSesion, soloAdmin, iniciarSesion, cerrarSesion };
