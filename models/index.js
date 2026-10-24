@@ -14,6 +14,8 @@ const User = model('User', new Schema({
   password: { type: String, required: true },
   role: { type: String, enum: ['user', 'admin'], default: 'user' },
   confirmed: { type: Boolean, default: false },   // se pone a true al pulsar el enlace del correo
+  active: { type: Boolean, default: true },       // el admin puede suspender una cuenta (no podrá iniciar sesión)
+  lastLogin: { type: Date, default: null },
   key: { type: String, default: '' },             // clave aleatoria de confirmación
   scenario: { type: String, enum: SCENARIO_IDS, default: DEFAULT_SCENARIO },
   pomodoro: { work: mins(25), short: mins(5), long: mins(15) },

@@ -1,6 +1,7 @@
 // Prueba de integración del registro, login, aislamiento de datos y rol admin (usa MongoDB en memoria)
 process.env.JWT_SECRET = 'secreto-de-prueba';
-delete process.env.EMAIL_USER; delete process.env.EMAIL_PASS; delete process.env.ADMIN_EMAIL;
+// Vacías (no borradas): así dotenv no las rellena con las del .env real y los tests no envían correos
+process.env.EMAIL_USER = ''; process.env.EMAIL_PASS = ''; process.env.ADMIN_EMAIL = '';
 const request = require('supertest');
 const mongoose = require('mongoose');
 const { MongoMemoryServer } = require('mongodb-memory-server');

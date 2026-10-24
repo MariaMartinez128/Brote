@@ -22,6 +22,7 @@ async function verificarSesion(req, res, next) {
     catch { return res.status(401).json({ error: 'Sesión caducada. Vuelve a iniciar sesión' }); }
     const user = await User.findById(id);
     if (!user) return res.status(401).json({ error: 'Usuario no encontrado' });
+    if (user.active === false) return res.status(403).json({ error: 'Tu cuenta está suspendida' });
     req.user = user;
     req.userId = user._id;
     next();

@@ -17,7 +17,8 @@ Incluye lista de tareas, temporizador Pomodoro, registro del estado de ánimo co
   | 🌲 Bosque | 🐄 Granja | 🚀 Estación espacial | 🏰 Reino medieval | 🎋 Jardín zen |
 
 - **Pomodoro** con duraciones configurables y contador de sesiones del día.
-- **Estado de ánimo:** eliges cómo te sientes y recibes una frase motivacional (del sistema o escritas por ti).
+- **Estado de ánimo:** eliges cómo te sientes y recibes una frase motivacional (del sistema o escritas por ti). Desde la misma pantalla puedes **escribir tus propias frases para cada ánimo**, pedir **otra frase**, ver **tu semana** (el ánimo de cada día) y tu **racha** de días seguidos.
+- **Panel de administración** (solo rol `admin`): estadísticas generales, búsqueda de usuarios, **eliminar usuarios** (con todos sus datos), hacer/quitar admin, suspender/reactivar cuentas, confirmar cuentas a mano y gestionar las **frases del sistema**.
 - **Panel** con el progreso del día, tu mundo, la próxima sesión y la frase del día.
 
 ## Tecnologías
@@ -79,8 +80,9 @@ Cambiar de escenario no borra nada: cada uno conserva su progreso y lo recuperas
 | Escenarios | `GET /scenarios` (catálogo completo con sus temas) |
 | Tareas | `GET /tasks`, `POST /tasks`, `PUT /tasks/:id` (editar o cambiar `status`), `DELETE /tasks/:id` |
 | Mundo (escenario activo) | `GET /city`, `PUT /city` |
-| Ánimo | `POST /moods`, `GET /moods/today`, `GET /moods` |
+| Ánimo | `POST /moods`, `POST /moods/otra`, `GET /moods/today`, `GET /moods/stats`, `GET /moods` |
 | Frases | `GET /phrases`, `POST /phrases`, `PUT /phrases/:id`, `DELETE /phrases/:id` |
+| Admin (solo `admin`) | `GET /admin/usuarios?q=`, `GET /admin/stats`, `PUT /admin/usuarios/:id/rol`, `PUT /admin/usuarios/:id/activo`, `PUT /admin/usuarios/:id/confirmar`, `DELETE /admin/usuarios/:id`, `GET/POST /admin/frases`, `DELETE /admin/frases/:id` |
 
 Al cambiar el `status` de una tarea (`done`, `failed` o `pending`), el servidor actualiza el mundo del escenario activo y devuelve el tablero y el efecto aplicado.
 
@@ -120,7 +122,7 @@ Brote/
 
 ## Postman
 
-Importa `postman/CityFocus.postman_collection.json`. La variable `baseUrl` apunta a `http://localhost:3000/api`; cámbiala por `https://TU-APP.onrender.com/api` para probar el despliegue.
+Importa `postman/Brote.postman_collection.json`. La variable `baseUrl` apunta a `http://localhost:3000/api`; cámbiala por `https://TU-APP.onrender.com/api` para probar el despliegue.
 
 ## Registro e inicio de sesión
 
@@ -128,7 +130,7 @@ Importa `postman/CityFocus.postman_collection.json`. La variable `baseUrl` apunt
 - **Confirmación por correo** (`GET /api/auth/confirmar/:email/:key`): solo si `EMAIL_USER` y `EMAIL_PASS` están definidos; si no, la cuenta queda confirmada al instante.
 - **Login** (`POST /api/auth/login`): crea una cookie `httpOnly` con un **JWT** firmado (`JWT_SECRET`) válido 7 días. `POST /api/auth/logout` la borra y `GET /api/auth/me` devuelve el usuario actual.
 - **Aislamiento:** todas las rutas `/api/*` (tareas, mundo, frases, ánimo…) exigen sesión y solo devuelven los datos del usuario autenticado.
-- **Roles:** `admin` (el email de `ADMIN_EMAIL`, o el primer registrado) puede listar (`GET /api/admin/usuarios`) y borrar usuarios; un usuario normal solo puede borrar su propia cuenta. Al borrar un usuario se borran también sus datos.
+- **Roles:** `admin` (el email de `ADMIN_EMAIL`, o el primer registrado) tiene un panel propio: lista y busca usuarios, los borra, cambia su rol, los suspende y gestiona las frases del sistema. Un usuario normal solo puede borrar su propia cuenta. Al borrar un usuario se borran también sus datos. Nadie puede quitarse el rol de admin ni borrar al último administrador.
 
 ## Desplegar en Google Cloud Run + MongoDB Atlas
 
@@ -144,4 +146,4 @@ Importa `postman/CityFocus.postman_collection.json`. La variable `baseUrl` apunt
 
 ## Tests
 
-`npm test` lanza los tests de modelos y los de autenticación. Estos últimos usan MongoDB en memoria (se descarga la primera vez) o la base indicada en `MONGO_TEST_URI`.
+`npm test` lanza los tests de modelos, autenticación, panel admin y frases por ánimo. Estos últimos usan MongoDB en memoria (se descarga la primera vez) o la base indicada en `MONGO_TEST_URI`.

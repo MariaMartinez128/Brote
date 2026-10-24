@@ -66,6 +66,8 @@ r.post('/login', limite, wrap(async (req, res) => {
   if (!user || !(await bcrypt.compare(String(password), user.password)))
     return res.status(400).json({ error: 'Credenciales incorrectas' });
   if (!user.confirmed) return res.status(403).json({ error: 'Debes confirmar tu cuenta con el enlace que te enviamos por correo' });
+  if (user.active === false) return res.status(403).json({ error: 'Tu cuenta está suspendida. Contacta con el administrador.' });
+  user.lastLogin = new Date(); await user.save();
   iniciarSesion(res, user);
   res.json({ mensaje: 'Inicio de sesión correcto', user: publico(user) });
 }));

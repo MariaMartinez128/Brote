@@ -14,7 +14,7 @@ app.use(cookieParser());
 // Rutas públicas
 app.get('/api/health', (req, res) => res.json({ ok: true }));
 app.use('/api/auth', require('./routes/auth'));
-app.use('/api/admin', require('./routes/admin'));
+app.use('/api/admin', require('./routes/admin'));   // cada ruta de admin exige sesión + rol admin
 
 // Rutas privadas: cada usuario solo ve sus propios datos (req.userId sale de la cookie de sesión)
 app.use('/api', verificarSesion);
@@ -36,13 +36,18 @@ app.use((err, req, res, next) => {
   res.status(500).json({ error: 'Error del servidor' });
 });
 
-async function start() {
+// Arranque: se abre el puerto enseguida (Cloud Run lo exige) y la base de datos se conecta en segundo plano.
+function start() {
   for (const v of ['MONGO_URI', 'JWT_SECRET'])
     if (!process.env[v]) { console.error(`Falta ${v} (revisa el archivo .env o las variables de entorno)`); process.exit(1); }
-  await mongoose.connect(process.env.MONGO_URI);
-  await seedPhrases();
   const port = process.env.PORT || 3000;
-  app.listen(port, () => console.log(`Brote en http://localhost:${port}`));
+  app.listen(port, () => {
+    console.log(`Brote escuchando en puerto ${port}`);
+    mongoose.connect(process.env.MONGO_URI)
+      .then(() => { console.log('Conectado a MongoDB'); return seedPhrases(); })
+      .catch(e => { console.error('Error al conectar con MongoDB:', e.message); process.exit(1); });
+  });
 }
-if (require.main === module) start().catch(e => { console.error('No se pudo iniciar:', e.message); process.exit(1); });
+// Solo arranca si se ejecuta con "node server.js" (los tests importan `app` sin abrir el puerto)
+if (require.main === module) start();
 module.exports = app;
