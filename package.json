@@ -1,7 +1,7 @@
 {
   "name": "Brote",
-  "version": "1.0.0",
-  "description": "Brote: productividad gamificada (Pomodoro, tareas, mood tracker y ciudad virtual)",
+  "version": "2.0.0",
+  "description": "Brote: productividad gamificada (tareas, Pomodoro, estado de ánimo, estadísticas y un mundo que crece o se destruye según cumplas)",
   "main": "server.js",
   "scripts": {
     "start": "node server.js",
@@ -17,9 +17,11 @@
     "dotenv": "^16.6.1",
     "express": "^4.22.3",
     "express-rate-limit": "^8.7.1",
+    "google-auth-library": "^10.9.1",
+    "helmet": "^8.3.0",
     "jsonwebtoken": "^9.0.3",
     "mongoose": "^8.24.5",
-    "nodemailer": "^6.9.13"
+    "nodemailer": "^10.3.1"
   },
   "devDependencies": {
     "jasmine": "^7.0.0",
@@ -30,7 +32,13 @@
     "type": "git",
     "url": "git+https://github.com/MariaMartinez128/Brote.git"
   },
-  "keywords": [],
+  "keywords": [
+    "productividad",
+    "gamificacion",
+    "pomodoro",
+    "express",
+    "mongodb"
+  ],
   "author": "",
   "license": "ISC",
   "type": "commonjs",

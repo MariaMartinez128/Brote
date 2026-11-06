@@ -1,6 +1,12 @@
 node_modules
 .git
+.github
 .env
 spec
 postman
+docs
 *.md
+.env.example
+.gitignore
+Dockerfile
+docker-compose.yml

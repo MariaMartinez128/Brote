@@ -3,29 +3,34 @@ const crypto = require('crypto');
 const bcrypt = require('bcryptjs');
 const rateLimit = require('express-rate-limit');
 const { User } = require('../models');
-const { getWorld } = require('../lib/city');
-const { enviarEmailConfirmacion, emailConfigurado } = require('../lib/email');
+const { getWorld } = require('../lib/world');
+const google = require('../lib/google');
+const { enviarEmailConfirmacion, enviarEmailReset, emailConfigurado } = require('../lib/email');
 const { verificarSesion, iniciarSesion, cerrarSesion } = require('../middleware/auth');
 const wrap = require('../wrap');
 
 const EMAIL_RE = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
-const limite = rateLimit({ windowMs: 15 * 60 * 1000, limit: 50, standardHeaders: true, legacyHeaders: false,
-  message: { error: 'Demasiados intentos. Prueba de nuevo en unos minutos.' } });
+const enTest = () => process.env.NODE_ENV === 'test';
+const limite = rateLimit({ windowMs: 15 * 60 * 1000, limit: 30, standardHeaders: true, legacyHeaders: false, skip: enTest,
+  skipSuccessfulRequests: true, message: { error: 'Demasiados intentos. Prueba de nuevo en unos minutos.' } });
 const publico = u => ({ id: u._id, name: u.name, email: u.email, role: u.role });
+// Administrador: el email indicado en ADMIN_EMAIL; si no hay ADMIN_EMAIL, el primer usuario registrado
+const seraAdmin = async mail => process.env.ADMIN_EMAIL
+  ? mail === process.env.ADMIN_EMAIL.trim().toLowerCase()
+  : (await User.countDocuments()) === 0;
+const sha = s => crypto.createHash('sha256').update(String(s)).digest('hex');
 
 // --- REGISTRO ---
 r.post('/register', limite, wrap(async (req, res) => {
   const { name, email, password } = req.body;
   if (!email || !password) return res.status(400).json({ error: 'Faltan campos obligatorios' });
   const mail = String(email).trim().toLowerCase();
-  if (!EMAIL_RE.test(mail)) return res.status(400).json({ error: 'El email no es válido' });
+  if (!EMAIL_RE.test(mail) || mail.length > 120) return res.status(400).json({ error: 'El email no es válido' });
   if (String(password).length < 8) return res.status(400).json({ error: 'La contraseña debe tener al menos 8 caracteres' });
+  if (Buffer.byteLength(String(password)) > 72) return res.status(400).json({ error: 'La contraseña es demasiado larga (máximo 72 caracteres)' });
   if (await User.exists({ email: mail })) return res.status(400).json({ error: 'El email ya está registrado' });
 
-  // Administrador: el email indicado en ADMIN_EMAIL; si no hay ADMIN_EMAIL, el primer usuario registrado
-  const admin = process.env.ADMIN_EMAIL
-    ? mail === process.env.ADMIN_EMAIL.trim().toLowerCase()
-    : (await User.countDocuments()) === 0;
+  const admin = await seraAdmin(mail);
   const conCorreo = emailConfigurado();
   const key = crypto.randomBytes(24).toString('hex');
 
@@ -51,9 +56,9 @@ r.post('/register', limite, wrap(async (req, res) => {
 
 // --- CONFIRMAR CUENTA (enlace del correo) ---
 r.get('/confirmar/:email/:key', wrap(async (req, res) => {
-  const user = await User.findOne({ email: String(req.params.email).toLowerCase(), key: req.params.key, confirmed: false });
-  if (!user || !req.params.key) return res.status(400).send('<h2>Enlace de confirmación no válido o ya utilizado</h2><p><a href="/">Ir a Brote</a></p>');
-  user.confirmed = true; user.key = '';
+  const user = req.params.key && await User.findOne({ email: String(req.params.email).toLowerCase(), key: req.params.key, confirmed: false });
+  if (!user) return res.status(400).send('<h2>Enlace de confirmación no válido o ya utilizado</h2><p><a href="/">Ir a Brote</a></p>');
+  user.confirmed = true; user.emailVerified = true; user.key = '';
   await user.save();
   res.send('<h2>¡Cuenta confirmada con éxito! 🌱</h2><p><a href="/">Iniciar sesión en Brote</a></p>');
 }));
@@ -70,6 +75,80 @@ r.post('/login', limite, wrap(async (req, res) => {
   user.lastLogin = new Date(); await user.save();
   iniciarSesion(res, user);
   res.json({ mensaje: 'Inicio de sesión correcto', user: publico(user) });
+}));
+
+// --- RECUPERAR CONTRASEÑA ---
+// Siempre responde lo mismo exista o no el email (no revela qué cuentas hay).
+r.post('/forgot', limite, wrap(async (req, res) => {
+  if (!emailConfigurado())
+    return res.status(503).json({ error: 'El envío de correos no está configurado. Pídele a un administrador que restablezca tu contraseña.' });
+  const mail = String(req.body.email || '').trim().toLowerCase();
+  const generica = { mensaje: 'Si el correo está registrado, te hemos enviado un enlace para elegir una contraseña nueva.' };
+  const user = EMAIL_RE.test(mail) && await User.findOne({ email: mail, confirmed: true, active: true });
+  if (!user) return res.json(generica);
+  const token = crypto.randomBytes(32).toString('hex');
+  user.resetHash = sha(token); user.resetExpires = new Date(Date.now() + 3600 * 1000);
+  await user.save();
+  try { await enviarEmailReset(user.email, token); } catch (err) { console.error('Error al enviar el correo de recuperación:', err.message); }
+  res.json(generica);
+}));
+
+r.post('/reset', limite, wrap(async (req, res) => {
+  const { token, password } = req.body;
+  if (!token || !password) return res.status(400).json({ error: 'Faltan campos obligatorios' });
+  if (String(password).length < 8) return res.status(400).json({ error: 'La contraseña debe tener al menos 8 caracteres' });
+  if (Buffer.byteLength(String(password)) > 72) return res.status(400).json({ error: 'La contraseña es demasiado larga (máximo 72 caracteres)' });
+  const user = await User.findOne({ resetHash: sha(token), resetExpires: { $gt: new Date() } });
+  if (!user) return res.status(400).json({ error: 'El enlace no es válido o ha caducado. Pide uno nuevo.' });
+  user.password = await bcrypt.hash(String(password), 10);
+  user.hasPassword = true; user.emailVerified = true;
+  user.resetHash = ''; user.resetExpires = null; user.passwordChangedAt = new Date();
+  await user.save();
+  res.json({ mensaje: 'Contraseña cambiada. Ya puedes iniciar sesión.' });
+}));
+
+
+// --- CONFIGURACIÓN PÚBLICA PARA EL CLIENTE (qué métodos de acceso hay) ---
+r.get('/config', (req, res) => res.json({ googleClientId: google.configurado() ? google.clientId() : null, correo: emailConfigurado() }));
+
+// --- INICIO DE SESIÓN CON GOOGLE ---
+// El navegador obtiene un "ID token" de Google; aquí se verifica su firma y su audiencia y se crea o recupera la cuenta.
+r.post('/google', limite, wrap(async (req, res) => {
+  if (!google.configurado()) return res.status(503).json({ error: 'El inicio de sesión con Google no está configurado' });
+  const { credential } = req.body;
+  if (typeof credential !== 'string' || !credential || credential.length > 4096) return res.status(400).json({ error: 'Falta la credencial de Google' });
+  let g;
+  try { g = await google.verificar(credential); }
+  catch { return res.status(401).json({ error: 'No se pudo verificar tu cuenta de Google. Inténtalo de nuevo.' }); }
+  if (!g.sub || !g.email || !g.emailVerified) return res.status(401).json({ error: 'Tu cuenta de Google no tiene el correo verificado' });
+
+  let user = await User.findOne({ googleId: g.sub }) || await User.findOne({ email: g.email });
+  let aviso = '';
+  if (!user) {
+    user = await User.create({
+      name: (g.name || g.email.split('@')[0]).trim().slice(0, 60) || 'Usuario', email: g.email,
+      password: await bcrypt.hash(crypto.randomBytes(32).toString('hex'), 10),   // contraseña aleatoria que nadie conoce
+      hasPassword: false, googleId: g.sub, confirmed: true, emailVerified: true,
+      role: (await seraAdmin(g.email)) ? 'admin' : 'user'
+    });
+    await getWorld(user._id, user.scenario);
+  } else if (!user.googleId) {
+    // Ya existía una cuenta con ese correo: se vincula. Si su correo nunca se comprobó, alguien pudo registrarlo
+    // antes que su dueño real; por eso se anula esa contraseña (el dueño la recupera con "¿Olvidaste tu contraseña?").
+    user.googleId = g.sub;
+    if (!user.emailVerified) {
+      user.password = await bcrypt.hash(crypto.randomBytes(32).toString('hex'), 10);
+      user.hasPassword = false; user.passwordChangedAt = new Date();
+      aviso = 'Hemos vinculado tu cuenta con Google. Por seguridad, la contraseña anterior ya no es válida.';
+    }
+    user.emailVerified = true; user.confirmed = true;
+  } else if (user.googleId !== g.sub) {
+    return res.status(403).json({ error: 'Ese correo está vinculado a otra cuenta de Google' });
+  }
+  if (user.active === false) return res.status(403).json({ error: 'Tu cuenta está suspendida. Contacta con el administrador.' });
+  user.lastLogin = new Date(); await user.save();
+  iniciarSesion(res, user);
+  res.json({ mensaje: 'Inicio de sesión correcto', aviso, user: publico(user) });
 }));
 
 // --- CERRAR SESIÓN / QUIÉN SOY ---
