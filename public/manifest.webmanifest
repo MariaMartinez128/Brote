@@ -1,0 +1,11 @@
+{
+  "name": "Brote",
+  "short_name": "Brote",
+  "description": "Productividad gamificada: completa tareas y haz crecer tu mundo.",
+  "start_url": "/",
+  "display": "standalone",
+  "background_color": "#e9efe4",
+  "theme_color": "#1f2d2a",
+  "lang": "es",
+  "icons": [{ "src": "/img/icon.svg", "sizes": "any", "type": "image/svg+xml", "purpose": "any" }]
+}

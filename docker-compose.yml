@@ -1,0 +1,23 @@
+# Arranca Brote + MongoDB en local con un solo comando:   docker compose up --build
+# Después abre http://localhost:3000 (el primer usuario que se registre será administrador)
+services:
+  mongo:
+    image: mongo:7
+    restart: unless-stopped
+    volumes: [mongo-data:/data/db]
+  brote:
+    build: .
+    restart: unless-stopped
+    depends_on: [mongo]
+    ports: ["3000:3000"]
+    environment:
+      PORT: 3000
+      MONGO_URI: mongodb://mongo:27017/Brote
+      JWT_SECRET: ${JWT_SECRET:-cambia-esto-en-tu-archivo-env-por-un-texto-largo-y-aleatorio}
+      ADMIN_EMAIL: ${ADMIN_EMAIL:-}
+      EMAIL_USER: ${EMAIL_USER:-}
+      EMAIL_PASS: ${EMAIL_PASS:-}
+      BASE_URL: http://localhost:3000
+      COOKIE_SECURE: "false"      # en http://localhost la cookie segura no se enviaría
+volumes:
+  mongo-data:

@@ -1,883 +1,1899 @@
 {
- "info": {
-  "name": "Brote API",
-  "schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json"
- },
- "variable": [
-  {
-   "key": "baseUrl",
-   "value": "http://localhost:3000/api"
+  "info": {
+    "name": "Brote API",
+    "schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json",
+    "description": "Colección de la API de Brote. 1) Registra un usuario, 2) inicia sesión (Postman guarda la cookie automáticamente), 3) prueba el resto.\nCambia la variable baseUrl por https://TU-SERVICIO.run.app/api para probar el despliegue.\nLas rutas de la carpeta Administrador solo funcionan con un usuario admin (el de ADMIN_EMAIL o el primero registrado)."
   },
-  {
-   "key": "taskId",
-   "value": ""
-  },
-  {
-   "key": "phraseId",
-   "value": ""
-  }
- ],
- "item": [
-  {
-   "name": "Sistema",
-   "item": [
+  "variable": [
     {
-     "name": "Health",
-     "event": [
-      {
-       "listen": "test",
-       "script": {
-        "type": "text/javascript",
-        "exec": [
-         "pm.test('Código 200', () => pm.response.to.have.status(200));"
-        ]
-       }
-      }
-     ],
-     "request": {
-      "method": "GET",
-      "header": [
-       {
-        "key": "Content-Type",
-        "value": "application/json"
-       }
-      ],
-      "url": {
-       "raw": "{{baseUrl}}/health",
-       "host": [
-        "{{baseUrl}}"
-       ],
-       "path": [
-        "health"
-       ]
-      }
-     }
+      "key": "baseUrl",
+      "value": "http://localhost:3000/api"
+    },
+    {
+      "key": "email",
+      "value": "ana@test.es"
+    },
+    {
+      "key": "password",
+      "value": "password123"
+    },
+    {
+      "key": "otroEmail",
+      "value": "otro@test.es"
+    },
+    {
+      "key": "taskId",
+      "value": ""
+    },
+    {
+      "key": "phraseId",
+      "value": ""
+    },
+    {
+      "key": "userId",
+      "value": ""
     }
-   ]
-  },
-  {
-   "name": "Usuario",
-   "item": [
+  ],
+  "item": [
     {
-     "name": "Obtener perfil",
-     "event": [
-      {
-       "listen": "test",
-       "script": {
-        "type": "text/javascript",
-        "exec": [
-         "pm.test('Código 200', () => pm.response.to.have.status(200));"
-        ]
-       }
-      }
-     ],
-     "request": {
-      "method": "GET",
-      "header": [
-       {
-        "key": "Content-Type",
-        "value": "application/json"
-       }
-      ],
-      "url": {
-       "raw": "{{baseUrl}}/user",
-       "host": [
-        "{{baseUrl}}"
-       ],
-       "path": [
-        "user"
-       ]
-      }
-     }
+      "name": "Salud",
+      "item": [
+        {
+          "name": "Estado del servidor y la base de datos",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('Respuesta correcta', () => pm.expect(pm.response.code).to.be.oneOf([200, 201, 204]));"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              },
+              {
+                "key": "X-Timezone",
+                "value": "Europe/Madrid"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/health",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "health"
+              ]
+            }
+          }
+        }
+      ]
     },
     {
-     "name": "Actualizar perfil",
-     "event": [
-      {
-       "listen": "test",
-       "script": {
-        "type": "text/javascript",
-        "exec": [
-         "pm.test('Código 200', () => pm.response.to.have.status(200));"
-        ]
-       }
-      }
-     ],
-     "request": {
-      "method": "PUT",
-      "header": [
-       {
-        "key": "Content-Type",
-        "value": "application/json"
-       }
-      ],
-      "url": {
-       "raw": "{{baseUrl}}/user",
-       "host": [
-        "{{baseUrl}}"
-       ],
-       "path": [
-        "user"
-       ]
-      },
-      "body": {
-       "mode": "raw",
-       "raw": "{\n  \"name\": \"Ana\",\n  \"email\": \"ana@correo.com\"\n}"
-      }
-     }
+      "name": "Autenticación",
+      "item": [
+        {
+          "name": "Registrar usuario",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('Respuesta correcta', () => pm.expect(pm.response.code).to.be.oneOf([200, 201, 204]));"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              },
+              {
+                "key": "X-Timezone",
+                "value": "Europe/Madrid"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"name\": \"Ana\",\n  \"email\": \"{{email}}\",\n  \"password\": \"{{password}}\"\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            },
+            "url": {
+              "raw": "{{baseUrl}}/auth/register",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "auth",
+                "register"
+              ]
+            }
+          }
+        },
+        {
+          "name": "Iniciar sesión (guarda la cookie)",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('Sesión iniciada', () => pm.response.to.have.status(200));"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              },
+              {
+                "key": "X-Timezone",
+                "value": "Europe/Madrid"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"email\": \"{{email}}\",\n  \"password\": \"{{password}}\"\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            },
+            "url": {
+              "raw": "{{baseUrl}}/auth/login",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "auth",
+                "login"
+              ]
+            }
+          }
+        },
+        {
+          "name": "Quién soy",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('Respuesta correcta', () => pm.expect(pm.response.code).to.be.oneOf([200, 201, 204]));"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              },
+              {
+                "key": "X-Timezone",
+                "value": "Europe/Madrid"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/auth/me",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "auth",
+                "me"
+              ]
+            }
+          }
+        },
+        {
+          "name": "Pedir enlace de recuperación",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('Respuesta correcta', () => pm.expect(pm.response.code).to.be.oneOf([200, 201, 204]));"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              },
+              {
+                "key": "X-Timezone",
+                "value": "Europe/Madrid"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"email\": \"{{email}}\"\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            },
+            "url": {
+              "raw": "{{baseUrl}}/auth/forgot",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "auth",
+                "forgot"
+              ]
+            }
+          }
+        },
+        {
+          "name": "Cambiar contraseña con el token del correo",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('Respuesta correcta', () => pm.expect(pm.response.code).to.be.oneOf([200, 201, 204]));"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              },
+              {
+                "key": "X-Timezone",
+                "value": "Europe/Madrid"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"token\": \"TOKEN_DEL_CORREO\",\n  \"password\": \"nueva-clave-123\"\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            },
+            "url": {
+              "raw": "{{baseUrl}}/auth/reset",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "auth",
+                "reset"
+              ]
+            }
+          }
+        },
+        {
+          "name": "Cerrar sesión",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('Respuesta correcta', () => pm.expect(pm.response.code).to.be.oneOf([200, 201, 204]));"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              },
+              {
+                "key": "X-Timezone",
+                "value": "Europe/Madrid"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/auth/logout",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "auth",
+                "logout"
+              ]
+            }
+          }
+        }
+      ]
     },
     {
-     "name": "Actualizar tiempos Pomodoro",
-     "event": [
-      {
-       "listen": "test",
-       "script": {
-        "type": "text/javascript",
-        "exec": [
-         "pm.test('Código 200', () => pm.response.to.have.status(200));"
-        ]
-       }
-      }
-     ],
-     "request": {
-      "method": "PUT",
-      "header": [
-       {
-        "key": "Content-Type",
-        "value": "application/json"
-       }
-      ],
-      "url": {
-       "raw": "{{baseUrl}}/user",
-       "host": [
-        "{{baseUrl}}"
-       ],
-       "path": [
-        "user"
-       ]
-      },
-      "body": {
-       "mode": "raw",
-       "raw": "{\n  \"pomodoro\": {\n    \"work\": 30,\n    \"short\": 5,\n    \"long\": 20\n  }\n}"
-      }
-     }
+      "name": "Usuario",
+      "item": [
+        {
+          "name": "Mi perfil (incluye sesiones Pomodoro de hoy)",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('Respuesta correcta', () => pm.expect(pm.response.code).to.be.oneOf([200, 201, 204]));"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              },
+              {
+                "key": "X-Timezone",
+                "value": "Europe/Madrid"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/user",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "user"
+              ]
+            }
+          }
+        },
+        {
+          "name": "Cambiar nombre y tiempos Pomodoro",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('Respuesta correcta', () => pm.expect(pm.response.code).to.be.oneOf([200, 201, 204]));"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "PUT",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              },
+              {
+                "key": "X-Timezone",
+                "value": "Europe/Madrid"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"name\": \"Ana\",\n  \"pomodoro\": {\n    \"work\": 25,\n    \"short\": 5,\n    \"long\": 15\n  }\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            },
+            "url": {
+              "raw": "{{baseUrl}}/user",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "user"
+              ]
+            }
+          }
+        },
+        {
+          "name": "Cambiar de escenario",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('Respuesta correcta', () => pm.expect(pm.response.code).to.be.oneOf([200, 201, 204]));"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "PUT",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              },
+              {
+                "key": "X-Timezone",
+                "value": "Europe/Madrid"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"scenario\": \"ciudad\"\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            },
+            "url": {
+              "raw": "{{baseUrl}}/user/scenario",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "user",
+                "scenario"
+              ]
+            }
+          }
+        },
+        {
+          "name": "Registrar una sesión Pomodoro",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('Respuesta correcta', () => pm.expect(pm.response.code).to.be.oneOf([200, 201, 204]));"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              },
+              {
+                "key": "X-Timezone",
+                "value": "Europe/Madrid"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"minutes\": 25\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            },
+            "url": {
+              "raw": "{{baseUrl}}/user/session",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "user",
+                "session"
+              ]
+            }
+          }
+        },
+        {
+          "name": "Estadísticas, nivel y logros",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('Respuesta correcta', () => pm.expect(pm.response.code).to.be.oneOf([200, 201, 204]));"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              },
+              {
+                "key": "X-Timezone",
+                "value": "Europe/Madrid"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/user/stats",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "user",
+                "stats"
+              ]
+            }
+          }
+        },
+        {
+          "name": "Descargar mis datos (JSON)",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('Respuesta correcta', () => pm.expect(pm.response.code).to.be.oneOf([200, 201, 204]));"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              },
+              {
+                "key": "X-Timezone",
+                "value": "Europe/Madrid"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/user/export",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "user",
+                "export"
+              ]
+            }
+          }
+        },
+        {
+          "name": "Cambiar mi contraseña",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('Respuesta correcta', () => pm.expect(pm.response.code).to.be.oneOf([200, 201, 204]));"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "PUT",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              },
+              {
+                "key": "X-Timezone",
+                "value": "Europe/Madrid"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"current\": \"{{password}}\",\n  \"password\": \"nueva-clave-123\"\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            },
+            "url": {
+              "raw": "{{baseUrl}}/user/password",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "user",
+                "password"
+              ]
+            }
+          }
+        },
+        {
+          "name": "Eliminar mi cuenta",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('Respuesta correcta', () => pm.expect(pm.response.code).to.be.oneOf([200, 201, 204]));"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "DELETE",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              },
+              {
+                "key": "X-Timezone",
+                "value": "Europe/Madrid"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"password\": \"{{password}}\"\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            },
+            "url": {
+              "raw": "{{baseUrl}}/user",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "user"
+              ]
+            }
+          }
+        }
+      ]
     },
     {
-     "name": "Sumar sesión Pomodoro",
-     "event": [
-      {
-       "listen": "test",
-       "script": {
-        "type": "text/javascript",
-        "exec": [
-         "pm.test('Código 200', () => pm.response.to.have.status(200));"
-        ]
-       }
-      }
-     ],
-     "request": {
-      "method": "POST",
-      "header": [
-       {
-        "key": "Content-Type",
-        "value": "application/json"
-       }
-      ],
-      "url": {
-       "raw": "{{baseUrl}}/user/session",
-       "host": [
-        "{{baseUrl}}"
-       ],
-       "path": [
-        "user",
-        "session"
-       ]
-      }
-     }
+      "name": "Escenarios y mundo",
+      "item": [
+        {
+          "name": "Catálogo de escenarios",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('Respuesta correcta', () => pm.expect(pm.response.code).to.be.oneOf([200, 201, 204]));"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              },
+              {
+                "key": "X-Timezone",
+                "value": "Europe/Madrid"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/scenarios",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "scenarios"
+              ]
+            }
+          }
+        },
+        {
+          "name": "Mundo del escenario activo",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('Respuesta correcta', () => pm.expect(pm.response.code).to.be.oneOf([200, 201, 204]));"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              },
+              {
+                "key": "X-Timezone",
+                "value": "Europe/Madrid"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/city",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "city"
+              ]
+            }
+          }
+        },
+        {
+          "name": "Empezar el mundo de nuevo",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('Respuesta correcta', () => pm.expect(pm.response.code).to.be.oneOf([200, 201, 204]));"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              },
+              {
+                "key": "X-Timezone",
+                "value": "Europe/Madrid"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/city/reset",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "city",
+                "reset"
+              ]
+            }
+          }
+        }
+      ]
+    },
+    {
+      "name": "Tareas",
+      "item": [
+        {
+          "name": "Listar tareas",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('Respuesta correcta', () => pm.expect(pm.response.code).to.be.oneOf([200, 201, 204]));"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              },
+              {
+                "key": "X-Timezone",
+                "value": "Europe/Madrid"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/tasks",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "tasks"
+              ]
+            }
+          }
+        },
+        {
+          "name": "Crear tarea",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "const j = pm.response.json(); pm.collectionVariables.set('taskId', j._id); pm.test('Tarea creada', () => pm.response.to.have.status(201));"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              },
+              {
+                "key": "X-Timezone",
+                "value": "Europe/Madrid"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"title\": \"Estudiar Node\",\n  \"type\": \"Estudio\",\n  \"dueDate\": \"2026-12-31\",\n  \"repeat\": \"none\"\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            },
+            "url": {
+              "raw": "{{baseUrl}}/tasks",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "tasks"
+              ]
+            }
+          }
+        },
+        {
+          "name": "Completar (crece el mundo)",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('Respuesta correcta', () => pm.expect(pm.response.code).to.be.oneOf([200, 201, 204]));"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "PUT",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              },
+              {
+                "key": "X-Timezone",
+                "value": "Europe/Madrid"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"status\": \"done\"\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            },
+            "url": {
+              "raw": "{{baseUrl}}/tasks/{{taskId}}",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "tasks",
+                "{{taskId}}"
+              ]
+            }
+          }
+        },
+        {
+          "name": "Marcar como fallida (se destruye algo)",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('Respuesta correcta', () => pm.expect(pm.response.code).to.be.oneOf([200, 201, 204]));"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "PUT",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              },
+              {
+                "key": "X-Timezone",
+                "value": "Europe/Madrid"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"status\": \"failed\"\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            },
+            "url": {
+              "raw": "{{baseUrl}}/tasks/{{taskId}}",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "tasks",
+                "{{taskId}}"
+              ]
+            }
+          }
+        },
+        {
+          "name": "Deshacer (vuelve a pendiente)",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('Respuesta correcta', () => pm.expect(pm.response.code).to.be.oneOf([200, 201, 204]));"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "PUT",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              },
+              {
+                "key": "X-Timezone",
+                "value": "Europe/Madrid"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"status\": \"pending\"\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            },
+            "url": {
+              "raw": "{{baseUrl}}/tasks/{{taskId}}",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "tasks",
+                "{{taskId}}"
+              ]
+            }
+          }
+        },
+        {
+          "name": "Editar tarea",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('Respuesta correcta', () => pm.expect(pm.response.code).to.be.oneOf([200, 201, 204]));"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "PUT",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              },
+              {
+                "key": "X-Timezone",
+                "value": "Europe/Madrid"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"title\": \"Estudiar Express\",\n  \"type\": \"Trabajo\",\n  \"dueDate\": \"\",\n  \"repeat\": \"daily\"\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            },
+            "url": {
+              "raw": "{{baseUrl}}/tasks/{{taskId}}",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "tasks",
+                "{{taskId}}"
+              ]
+            }
+          }
+        },
+        {
+          "name": "Eliminar tarea",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('Respuesta correcta', () => pm.expect(pm.response.code).to.be.oneOf([200, 201, 204]));"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "DELETE",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              },
+              {
+                "key": "X-Timezone",
+                "value": "Europe/Madrid"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/tasks/{{taskId}}",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "tasks",
+                "{{taskId}}"
+              ]
+            }
+          }
+        }
+      ]
+    },
+    {
+      "name": "Ánimo",
+      "item": [
+        {
+          "name": "Registrar ánimo",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('Respuesta correcta', () => pm.expect(pm.response.code).to.be.oneOf([200, 201, 204]));"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              },
+              {
+                "key": "X-Timezone",
+                "value": "Europe/Madrid"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"mood\": \"motivado\"\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            },
+            "url": {
+              "raw": "{{baseUrl}}/moods",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "moods"
+              ]
+            }
+          }
+        },
+        {
+          "name": "Otra frase",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('Respuesta correcta', () => pm.expect(pm.response.code).to.be.oneOf([200, 201, 204]));"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              },
+              {
+                "key": "X-Timezone",
+                "value": "Europe/Madrid"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"mood\": \"motivado\"\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            },
+            "url": {
+              "raw": "{{baseUrl}}/moods/otra",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "moods",
+                "otra"
+              ]
+            }
+          }
+        },
+        {
+          "name": "Ánimo de hoy",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('Respuesta correcta', () => pm.expect(pm.response.code).to.be.oneOf([200, 201, 204]));"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              },
+              {
+                "key": "X-Timezone",
+                "value": "Europe/Madrid"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/moods/today",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "moods",
+                "today"
+              ]
+            }
+          }
+        },
+        {
+          "name": "Resumen de la semana y racha",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('Respuesta correcta', () => pm.expect(pm.response.code).to.be.oneOf([200, 201, 204]));"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              },
+              {
+                "key": "X-Timezone",
+                "value": "Europe/Madrid"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/moods/stats",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "moods",
+                "stats"
+              ]
+            }
+          }
+        },
+        {
+          "name": "Historial",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('Respuesta correcta', () => pm.expect(pm.response.code).to.be.oneOf([200, 201, 204]));"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              },
+              {
+                "key": "X-Timezone",
+                "value": "Europe/Madrid"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/moods",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "moods"
+              ]
+            }
+          }
+        }
+      ]
+    },
+    {
+      "name": "Frases propias",
+      "item": [
+        {
+          "name": "Listar mis frases",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('Respuesta correcta', () => pm.expect(pm.response.code).to.be.oneOf([200, 201, 204]));"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              },
+              {
+                "key": "X-Timezone",
+                "value": "Europe/Madrid"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/phrases?includeDefaults=true",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "phrases"
+              ],
+              "query": [
+                {
+                  "key": "includeDefaults",
+                  "value": "true"
+                }
+              ]
+            }
+          }
+        },
+        {
+          "name": "Crear frase",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "const j = pm.response.json(); pm.collectionVariables.set('phraseId', j._id); pm.test('Frase creada', () => pm.response.to.have.status(201));"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              },
+              {
+                "key": "X-Timezone",
+                "value": "Europe/Madrid"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"text\": \"Hoy planto una semilla\",\n  \"mood\": \"feliz\"\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            },
+            "url": {
+              "raw": "{{baseUrl}}/phrases",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "phrases"
+              ]
+            }
+          }
+        },
+        {
+          "name": "Editar frase",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('Respuesta correcta', () => pm.expect(pm.response.code).to.be.oneOf([200, 201, 204]));"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "PUT",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              },
+              {
+                "key": "X-Timezone",
+                "value": "Europe/Madrid"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"text\": \"Hoy planto dos semillas\"\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            },
+            "url": {
+              "raw": "{{baseUrl}}/phrases/{{phraseId}}",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "phrases",
+                "{{phraseId}}"
+              ]
+            }
+          }
+        },
+        {
+          "name": "Eliminar frase",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('Respuesta correcta', () => pm.expect(pm.response.code).to.be.oneOf([200, 201, 204]));"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "DELETE",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              },
+              {
+                "key": "X-Timezone",
+                "value": "Europe/Madrid"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/phrases/{{phraseId}}",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "phrases",
+                "{{phraseId}}"
+              ]
+            }
+          }
+        }
+      ]
+    },
+    {
+      "name": "Administrador (requiere rol admin)",
+      "item": [
+        {
+          "name": "Estadísticas generales",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('Respuesta correcta', () => pm.expect(pm.response.code).to.be.oneOf([200, 201, 204]));"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              },
+              {
+                "key": "X-Timezone",
+                "value": "Europe/Madrid"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/admin/stats",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "admin",
+                "stats"
+              ]
+            }
+          }
+        },
+        {
+          "name": "Listar / buscar usuarios (?q=)",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "const j = pm.response.json(); const o = j.find(u => u.email === pm.collectionVariables.get('otroEmail')); if (o) pm.collectionVariables.set('userId', o._id);"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              },
+              {
+                "key": "X-Timezone",
+                "value": "Europe/Madrid"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/admin/usuarios",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "admin",
+                "usuarios"
+              ]
+            }
+          }
+        },
+        {
+          "name": "Hacer o quitar admin",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('Respuesta correcta', () => pm.expect(pm.response.code).to.be.oneOf([200, 201, 204]));"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "PUT",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              },
+              {
+                "key": "X-Timezone",
+                "value": "Europe/Madrid"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"role\": \"admin\"\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            },
+            "url": {
+              "raw": "{{baseUrl}}/admin/usuarios/{{userId}}/rol",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "admin",
+                "usuarios",
+                "{{userId}}",
+                "rol"
+              ]
+            }
+          }
+        },
+        {
+          "name": "Suspender o reactivar cuenta",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('Respuesta correcta', () => pm.expect(pm.response.code).to.be.oneOf([200, 201, 204]));"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "PUT",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              },
+              {
+                "key": "X-Timezone",
+                "value": "Europe/Madrid"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"active\": false\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            },
+            "url": {
+              "raw": "{{baseUrl}}/admin/usuarios/{{userId}}/activo",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "admin",
+                "usuarios",
+                "{{userId}}",
+                "activo"
+              ]
+            }
+          }
+        },
+        {
+          "name": "Confirmar cuenta a mano",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('Respuesta correcta', () => pm.expect(pm.response.code).to.be.oneOf([200, 201, 204]));"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "PUT",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              },
+              {
+                "key": "X-Timezone",
+                "value": "Europe/Madrid"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/admin/usuarios/{{userId}}/confirmar",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "admin",
+                "usuarios",
+                "{{userId}}",
+                "confirmar"
+              ]
+            }
+          }
+        },
+        {
+          "name": "Restablecer contraseña (devuelve una temporal)",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('Respuesta correcta', () => pm.expect(pm.response.code).to.be.oneOf([200, 201, 204]));"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "PUT",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              },
+              {
+                "key": "X-Timezone",
+                "value": "Europe/Madrid"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/admin/usuarios/{{userId}}/password",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "admin",
+                "usuarios",
+                "{{userId}}",
+                "password"
+              ]
+            }
+          }
+        },
+        {
+          "name": "ELIMINAR usuario y todos sus datos",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('Respuesta correcta', () => pm.expect(pm.response.code).to.be.oneOf([200, 201, 204]));"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "DELETE",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              },
+              {
+                "key": "X-Timezone",
+                "value": "Europe/Madrid"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/admin/usuarios/{{userId}}",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "admin",
+                "usuarios",
+                "{{userId}}"
+              ]
+            }
+          }
+        },
+        {
+          "name": "Frases del sistema",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('Respuesta correcta', () => pm.expect(pm.response.code).to.be.oneOf([200, 201, 204]));"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              },
+              {
+                "key": "X-Timezone",
+                "value": "Europe/Madrid"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/admin/frases",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "admin",
+                "frases"
+              ]
+            }
+          }
+        },
+        {
+          "name": "Añadir frase del sistema",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('Respuesta correcta', () => pm.expect(pm.response.code).to.be.oneOf([200, 201, 204]));"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              },
+              {
+                "key": "X-Timezone",
+                "value": "Europe/Madrid"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"text\": \"Frase para todos\",\n  \"mood\": \"feliz\"\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            },
+            "url": {
+              "raw": "{{baseUrl}}/admin/frases",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "admin",
+                "frases"
+              ]
+            }
+          }
+        },
+        {
+          "name": "Registro de acciones de administradores",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('Respuesta correcta', () => pm.expect(pm.response.code).to.be.oneOf([200, 201, 204]));"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              },
+              {
+                "key": "X-Timezone",
+                "value": "Europe/Madrid"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/admin/auditoria",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "admin",
+                "auditoria"
+              ]
+            }
+          }
+        }
+      ]
     }
-   ]
-  },
-  {
-   "name": "Tareas",
-   "item": [
-    {
-     "name": "Listar tareas",
-     "event": [
-      {
-       "listen": "test",
-       "script": {
-        "type": "text/javascript",
-        "exec": [
-         "pm.test('Código 200', () => pm.response.to.have.status(200));"
-        ]
-       }
-      }
-     ],
-     "request": {
-      "method": "GET",
-      "header": [
-       {
-        "key": "Content-Type",
-        "value": "application/json"
-       }
-      ],
-      "url": {
-       "raw": "{{baseUrl}}/tasks",
-       "host": [
-        "{{baseUrl}}"
-       ],
-       "path": [
-        "tasks"
-       ]
-      }
-     }
-    },
-    {
-     "name": "Crear tarea",
-     "event": [
-      {
-       "listen": "test",
-       "script": {
-        "type": "text/javascript",
-        "exec": [
-         "pm.test('Código 201', () => pm.response.to.have.status(201));",
-         "pm.collectionVariables.set('taskId', pm.response.json()._id);"
-        ]
-       }
-      }
-     ],
-     "request": {
-      "method": "POST",
-      "header": [
-       {
-        "key": "Content-Type",
-        "value": "application/json"
-       }
-      ],
-      "url": {
-       "raw": "{{baseUrl}}/tasks",
-       "host": [
-        "{{baseUrl}}"
-       ],
-       "path": [
-        "tasks"
-       ]
-      },
-      "body": {
-       "mode": "raw",
-       "raw": "{\n  \"title\": \"Estudiar Node\",\n  \"type\": \"Estudio\"\n}"
-      }
-     }
-    },
-    {
-     "name": "Crear tarea sin título (error)",
-     "event": [
-      {
-       "listen": "test",
-       "script": {
-        "type": "text/javascript",
-        "exec": [
-         "pm.test('Código 400', () => pm.response.to.have.status(400));"
-        ]
-       }
-      }
-     ],
-     "request": {
-      "method": "POST",
-      "header": [
-       {
-        "key": "Content-Type",
-        "value": "application/json"
-       }
-      ],
-      "url": {
-       "raw": "{{baseUrl}}/tasks",
-       "host": [
-        "{{baseUrl}}"
-       ],
-       "path": [
-        "tasks"
-       ]
-      },
-      "body": {
-       "mode": "raw",
-       "raw": "{\n  \"title\": \"\"\n}"
-      }
-     }
-    },
-    {
-     "name": "Editar título",
-     "event": [
-      {
-       "listen": "test",
-       "script": {
-        "type": "text/javascript",
-        "exec": [
-         "pm.test('Código 200', () => pm.response.to.have.status(200));"
-        ]
-       }
-      }
-     ],
-     "request": {
-      "method": "PUT",
-      "header": [
-       {
-        "key": "Content-Type",
-        "value": "application/json"
-       }
-      ],
-      "url": {
-       "raw": "{{baseUrl}}/tasks/{{taskId}}",
-       "host": [
-        "{{baseUrl}}"
-       ],
-       "path": [
-        "tasks",
-        "{{taskId}}"
-       ]
-      },
-      "body": {
-       "mode": "raw",
-       "raw": "{\n  \"title\": \"Estudiar Express\"\n}"
-      }
-     }
-    },
-    {
-     "name": "Completar (construye edificio)",
-     "event": [
-      {
-       "listen": "test",
-       "script": {
-        "type": "text/javascript",
-        "exec": [
-         "pm.test('Código 200', () => pm.response.to.have.status(200));"
-        ]
-       }
-      }
-     ],
-     "request": {
-      "method": "PUT",
-      "header": [
-       {
-        "key": "Content-Type",
-        "value": "application/json"
-       }
-      ],
-      "url": {
-       "raw": "{{baseUrl}}/tasks/{{taskId}}",
-       "host": [
-        "{{baseUrl}}"
-       ],
-       "path": [
-        "tasks",
-        "{{taskId}}"
-       ]
-      },
-      "body": {
-       "mode": "raw",
-       "raw": "{\n  \"status\": \"done\"\n}"
-      }
-     }
-    },
-    {
-     "name": "Marcar fallida (destruye edificio)",
-     "event": [
-      {
-       "listen": "test",
-       "script": {
-        "type": "text/javascript",
-        "exec": [
-         "pm.test('Código 200', () => pm.response.to.have.status(200));"
-        ]
-       }
-      }
-     ],
-     "request": {
-      "method": "PUT",
-      "header": [
-       {
-        "key": "Content-Type",
-        "value": "application/json"
-       }
-      ],
-      "url": {
-       "raw": "{{baseUrl}}/tasks/{{taskId}}",
-       "host": [
-        "{{baseUrl}}"
-       ],
-       "path": [
-        "tasks",
-        "{{taskId}}"
-       ]
-      },
-      "body": {
-       "mode": "raw",
-       "raw": "{\n  \"status\": \"failed\"\n}"
-      }
-     }
-    },
-    {
-     "name": "Volver a pendiente",
-     "event": [
-      {
-       "listen": "test",
-       "script": {
-        "type": "text/javascript",
-        "exec": [
-         "pm.test('Código 200', () => pm.response.to.have.status(200));"
-        ]
-       }
-      }
-     ],
-     "request": {
-      "method": "PUT",
-      "header": [
-       {
-        "key": "Content-Type",
-        "value": "application/json"
-       }
-      ],
-      "url": {
-       "raw": "{{baseUrl}}/tasks/{{taskId}}",
-       "host": [
-        "{{baseUrl}}"
-       ],
-       "path": [
-        "tasks",
-        "{{taskId}}"
-       ]
-      },
-      "body": {
-       "mode": "raw",
-       "raw": "{\n  \"status\": \"pending\"\n}"
-      }
-     }
-    },
-    {
-     "name": "Eliminar tarea",
-     "event": [
-      {
-       "listen": "test",
-       "script": {
-        "type": "text/javascript",
-        "exec": [
-         "pm.test('Código 204', () => pm.response.to.have.status(204));"
-        ]
-       }
-      }
-     ],
-     "request": {
-      "method": "DELETE",
-      "header": [
-       {
-        "key": "Content-Type",
-        "value": "application/json"
-       }
-      ],
-      "url": {
-       "raw": "{{baseUrl}}/tasks/{{taskId}}",
-       "host": [
-        "{{baseUrl}}"
-       ],
-       "path": [
-        "tasks",
-        "{{taskId}}"
-       ]
-      }
-     }
-    }
-   ]
-  },
-  {
-   "name": "Ciudad",
-   "item": [
-    {
-     "name": "Obtener ciudad",
-     "event": [
-      {
-       "listen": "test",
-       "script": {
-        "type": "text/javascript",
-        "exec": [
-         "pm.test('Código 200', () => pm.response.to.have.status(200));"
-        ]
-       }
-      }
-     ],
-     "request": {
-      "method": "GET",
-      "header": [
-       {
-        "key": "Content-Type",
-        "value": "application/json"
-       }
-      ],
-      "url": {
-       "raw": "{{baseUrl}}/city",
-       "host": [
-        "{{baseUrl}}"
-       ],
-       "path": [
-        "city"
-       ]
-      }
-     }
-    },
-    {
-     "name": "Reiniciar ciudad",
-     "event": [
-      {
-       "listen": "test",
-       "script": {
-        "type": "text/javascript",
-        "exec": [
-         "pm.test('Código 200', () => pm.response.to.have.status(200));"
-        ]
-       }
-      }
-     ],
-     "request": {
-      "method": "PUT",
-      "header": [
-       {
-        "key": "Content-Type",
-        "value": "application/json"
-       }
-      ],
-      "url": {
-       "raw": "{{baseUrl}}/city",
-       "host": [
-        "{{baseUrl}}"
-       ],
-       "path": [
-        "city"
-       ]
-      },
-      "body": {
-       "mode": "raw",
-       "raw": "{\n  \"cells\": [\n    \"\",\n    \"\",\n    \"\",\n    \"\",\n    \"\",\n    \"\",\n    \"\",\n    \"\",\n    \"\",\n    \"\",\n    \"\",\n    \"\",\n    \"\",\n    \"\",\n    \"\",\n    \"\",\n    \"\",\n    \"\",\n    \"\",\n    \"\",\n    \"\",\n    \"\",\n    \"\",\n    \"\",\n    \"\",\n    \"\",\n    \"\",\n    \"\",\n    \"\",\n    \"\",\n    \"\",\n    \"\",\n    \"\",\n    \"\",\n    \"\",\n    \"\",\n    \"\",\n    \"\",\n    \"\",\n    \"\",\n    \"\",\n    \"\",\n    \"\",\n    \"\",\n    \"\",\n    \"\",\n    \"\",\n    \"\",\n    \"\",\n    \"\"\n  ],\n  \"lost\": 0\n}"
-      }
-     }
-    }
-   ]
-  },
-  {
-   "name": "Ánimo",
-   "item": [
-    {
-     "name": "Registrar ánimo y obtener frase",
-     "event": [
-      {
-       "listen": "test",
-       "script": {
-        "type": "text/javascript",
-        "exec": [
-         "pm.test('Código 201', () => pm.response.to.have.status(201));"
-        ]
-       }
-      }
-     ],
-     "request": {
-      "method": "POST",
-      "header": [
-       {
-        "key": "Content-Type",
-        "value": "application/json"
-       }
-      ],
-      "url": {
-       "raw": "{{baseUrl}}/moods",
-       "host": [
-        "{{baseUrl}}"
-       ],
-       "path": [
-        "moods"
-       ]
-      },
-      "body": {
-       "mode": "raw",
-       "raw": "{\n  \"mood\": \"motivado\"\n}"
-      }
-     }
-    },
-    {
-     "name": "Ánimo no válido (error)",
-     "event": [
-      {
-       "listen": "test",
-       "script": {
-        "type": "text/javascript",
-        "exec": [
-         "pm.test('Código 400', () => pm.response.to.have.status(400));"
-        ]
-       }
-      }
-     ],
-     "request": {
-      "method": "POST",
-      "header": [
-       {
-        "key": "Content-Type",
-        "value": "application/json"
-       }
-      ],
-      "url": {
-       "raw": "{{baseUrl}}/moods",
-       "host": [
-        "{{baseUrl}}"
-       ],
-       "path": [
-        "moods"
-       ]
-      },
-      "body": {
-       "mode": "raw",
-       "raw": "{\n  \"mood\": \"enfadado\"\n}"
-      }
-     }
-    },
-    {
-     "name": "Ánimo de hoy",
-     "event": [
-      {
-       "listen": "test",
-       "script": {
-        "type": "text/javascript",
-        "exec": [
-         "pm.test('Código 200', () => pm.response.to.have.status(200));"
-        ]
-       }
-      }
-     ],
-     "request": {
-      "method": "GET",
-      "header": [
-       {
-        "key": "Content-Type",
-        "value": "application/json"
-       }
-      ],
-      "url": {
-       "raw": "{{baseUrl}}/moods/today",
-       "host": [
-        "{{baseUrl}}"
-       ],
-       "path": [
-        "moods",
-        "today"
-       ]
-      }
-     }
-    },
-    {
-     "name": "Historial",
-     "event": [
-      {
-       "listen": "test",
-       "script": {
-        "type": "text/javascript",
-        "exec": [
-         "pm.test('Código 200', () => pm.response.to.have.status(200));"
-        ]
-       }
-      }
-     ],
-     "request": {
-      "method": "GET",
-      "header": [
-       {
-        "key": "Content-Type",
-        "value": "application/json"
-       }
-      ],
-      "url": {
-       "raw": "{{baseUrl}}/moods",
-       "host": [
-        "{{baseUrl}}"
-       ],
-       "path": [
-        "moods"
-       ]
-      }
-     }
-    }
-   ]
-  },
-  {
-   "name": "Frases",
-   "item": [
-    {
-     "name": "Listar mis frases",
-     "event": [
-      {
-       "listen": "test",
-       "script": {
-        "type": "text/javascript",
-        "exec": [
-         "pm.test('Código 200', () => pm.response.to.have.status(200));"
-        ]
-       }
-      }
-     ],
-     "request": {
-      "method": "GET",
-      "header": [
-       {
-        "key": "Content-Type",
-        "value": "application/json"
-       }
-      ],
-      "url": {
-       "raw": "{{baseUrl}}/phrases",
-       "host": [
-        "{{baseUrl}}"
-       ],
-       "path": [
-        "phrases"
-       ]
-      }
-     }
-    },
-    {
-     "name": "Listar con las del sistema",
-     "event": [
-      {
-       "listen": "test",
-       "script": {
-        "type": "text/javascript",
-        "exec": [
-         "pm.test('Código 200', () => pm.response.to.have.status(200));"
-        ]
-       }
-      }
-     ],
-     "request": {
-      "method": "GET",
-      "header": [
-       {
-        "key": "Content-Type",
-        "value": "application/json"
-       }
-      ],
-      "url": {
-       "raw": "{{baseUrl}}/phrases?includeDefaults=true",
-       "host": [
-        "{{baseUrl}}"
-       ],
-       "path": [
-        "phrases?includeDefaults=true"
-       ]
-      }
-     }
-    },
-    {
-     "name": "Crear frase",
-     "event": [
-      {
-       "listen": "test",
-       "script": {
-        "type": "text/javascript",
-        "exec": [
-         "pm.test('Código 201', () => pm.response.to.have.status(201));",
-         "pm.collectionVariables.set('phraseId', pm.response.json()._id);"
-        ]
-       }
-      }
-     ],
-     "request": {
-      "method": "POST",
-      "header": [
-       {
-        "key": "Content-Type",
-        "value": "application/json"
-       }
-      ],
-      "url": {
-       "raw": "{{baseUrl}}/phrases",
-       "host": [
-        "{{baseUrl}}"
-       ],
-       "path": [
-        "phrases"
-       ]
-      },
-      "body": {
-       "mode": "raw",
-       "raw": "{\n  \"text\": \"Hoy sí puedo.\",\n  \"mood\": \"cansado\"\n}"
-      }
-     }
-    },
-    {
-     "name": "Editar frase",
-     "event": [
-      {
-       "listen": "test",
-       "script": {
-        "type": "text/javascript",
-        "exec": [
-         "pm.test('Código 200', () => pm.response.to.have.status(200));"
-        ]
-       }
-      }
-     ],
-     "request": {
-      "method": "PUT",
-      "header": [
-       {
-        "key": "Content-Type",
-        "value": "application/json"
-       }
-      ],
-      "url": {
-       "raw": "{{baseUrl}}/phrases/{{phraseId}}",
-       "host": [
-        "{{baseUrl}}"
-       ],
-       "path": [
-        "phrases",
-        "{{phraseId}}"
-       ]
-      },
-      "body": {
-       "mode": "raw",
-       "raw": "{\n  \"text\": \"Hoy sí puedo con una cosa.\"\n}"
-      }
-     }
-    },
-    {
-     "name": "Eliminar frase",
-     "event": [
-      {
-       "listen": "test",
-       "script": {
-        "type": "text/javascript",
-        "exec": [
-         "pm.test('Código 204', () => pm.response.to.have.status(204));"
-        ]
-       }
-      }
-     ],
-     "request": {
-      "method": "DELETE",
-      "header": [
-       {
-        "key": "Content-Type",
-        "value": "application/json"
-       }
-      ],
-      "url": {
-       "raw": "{{baseUrl}}/phrases/{{phraseId}}",
-       "host": [
-        "{{baseUrl}}"
-       ],
-       "path": [
-        "phrases",
-        "{{phraseId}}"
-       ]
-      }
-     }
-    }
-   ]
-  }
- ]
+  ]
 }

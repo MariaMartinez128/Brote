@@ -1,19 +1,19 @@
 const r = require('express').Router();
-const { getWorld } = require('../lib/city');
+const { getWorld, resetWorld } = require('../lib/world');
+const { User } = require('../models');
+const conCola = require('../lib/lock');
 const wrap = require('../wrap');
 
-// Mundo del escenario activo
+// Mundo del escenario activo. El tablero solo cambia completando o fallando tareas (el servidor es la única fuente de verdad).
 r.get('/', wrap(async (req, res) => res.json(await getWorld(req.userId))));
 
-// Sustituye el estado del mundo activo (sirve también para reiniciarlo)
-r.put('/', wrap(async (req, res) => {
-  const { cells, lost } = req.body;
-  if (!Array.isArray(cells) || cells.length !== 50 || cells.some(c => typeof c !== 'string'))
-    return res.status(400).json({ error: 'cells debe ser un array de 50 textos' });
-  if (!Number.isInteger(lost) || lost < 0) return res.status(400).json({ error: 'lost debe ser un entero >= 0' });
-  const city = await getWorld(req.userId);
-  city.cells = cells; city.lost = lost;
-  await city.save();
-  res.json(city);
+// Reinicia el tablero activo. Si estaba lleno cuenta como "mundo completado" (para los logros).
+r.post('/reset', wrap(async (req, res) => {
+  const w = await conCola(String(req.userId), async () => {
+    const u = await User.findById(req.userId, 'scenario');
+    return resetWorld(req.userId, u.scenario);
+  });
+  res.json(w);
 }));
+
 module.exports = r;
