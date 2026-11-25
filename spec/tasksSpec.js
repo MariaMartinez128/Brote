@@ -23,6 +23,20 @@ describe('Tareas y mundo', () => {
     expect((await ag.get('/api/tasks/no-existe')).status).toBe(404);
   });
 
+  it('rechaza fechas imposibles sin error 500 y no modifica la tarea', async () => {
+    const post = await ag.post('/api/tasks').send({ title: 'Fecha imposible', dueDate: '2026-13-01' });
+    expect(post.status).toBe(400);
+    expect(post.body.error).toContain('Fecha no válida');
+
+    const t = await crear('Fecha válida', { dueDate: '2026-12-31' });
+    const put = await ag.put('/api/tasks/' + t._id).send({ dueDate: '2026-13-01' });
+    expect(put.status).toBe(400);
+    expect(put.body.error).toContain('Fecha no válida');
+
+    const lista = (await ag.get('/api/tasks')).body;
+    expect(lista.find(x => x._id === t._id).dueDate).toBe('2026-12-31');
+  });
+
   it('completar crea una casilla y deshacer quita EXACTAMENTE esa casilla', async () => {
     const a = await crear('A'), b = await crear('B');
     const ra = await estado(a, 'done'), rb = await estado(b, 'done');
