@@ -1,6 +1,9 @@
 # 🌱 Brote
 
 **Productividad gamificada.** Completa tus tareas y haz crecer tu propio mundo; si fallas, se resiente.
+
+🌐 **Aplicación desplegada:** [https://brote-178397381892.europe-west1.run.app/](https://brote-178397381892.europe-west1.run.app/)
+
 Tú eliges el escenario (un huerto, una ciudad, un sistema solar, una playa…) y cada uno guarda su propio progreso.
 
 <p align="center">
@@ -11,6 +14,7 @@ Tú eliges el escenario (un huerto, una ciudad, un sistema solar, una playa…) 
 ## Características
 
 **Para cualquier usuario**
+
 - **Tareas** de tres tipos (Estudio, Trabajo, Hábito) con **fecha límite**, **repetición diaria** para hábitos, filtros (Hoy · Pendientes · Hechas · Todas) y aviso de tareas vencidas. Se pueden completar, marcar como fallidas, editar, eliminar y **deshacer**.
 - **Mundo que crece o se destruye:** completar una tarea hace aparecer un elemento en el tablero (50 casillas); fallarla destruye uno. **Deshacer es exacto**: se quita justo la casilla que creó esa tarea. Si llenas el tablero, ¡mundo completado! y puedes empezar otro.
 - **10 escenarios** (🌱 Huerto, 🏙️ Ciudad, 🪐 Sistema solar, 🏖️ Playa, 🐠 Océano, 🌲 Bosque, 🐄 Granja, 🚀 Estación espacial, 🏰 Reino medieval, 🎋 Jardín zen), cada uno con su tablero, colores y textos, y su propio progreso.
@@ -20,6 +24,7 @@ Tú eliges el escenario (un huerto, una ciudad, un sistema solar, una playa…) 
 - **Cuenta:** **iniciar sesión con Google**, recuperar contraseña por correo, cambiarla, **descargar todos mis datos (JSON)** y eliminar mi cuenta. Tema claro/oscuro.
 
 **Para el administrador (rol `admin`)**
+
 - Estadísticas generales de la aplicación.
 - Listar y **buscar usuarios** con su actividad.
 - **Eliminar usuarios de la base de datos junto con todos sus datos** (tareas, mundos, ánimos, estadísticas y frases).
@@ -40,12 +45,15 @@ Node.js 18+ · Express 4 · MongoDB con Mongoose · HTML, CSS y JavaScript nativ
 ## Ejecutar en local
 
 ### Opción A: con Docker (un solo comando)
+
 ```bash
 docker compose up --build
 ```
+
 Abre <http://localhost:3000>. Levanta la app y una base MongoDB. El primer usuario que se registre será administrador.
 
 ### Opción B: con Node.js
+
 1. `npm install`
 2. Copia `.env.example` a `.env` y rellena `MONGO_URI` (local o [MongoDB Atlas](https://www.mongodb.com/atlas)) y `JWT_SECRET`.
 3. `npm start` (o `npm run dev` para recarga automática) y abre <http://localhost:3000>.
@@ -104,7 +112,7 @@ Colección de **Postman** en `postman/Brote.postman_collection.json` (la variabl
 
 ## Estructura del proyecto
 
-```
+```text
 Brote/
 ├── server.js            # Arranque, seguridad, rutas, errores y cierre ordenado
 ├── seed.js              # Frases motivacionales por defecto
@@ -126,6 +134,7 @@ Brote/
 ```
 
 **Añadir un escenario:** edita `lib/scenarios.js` y añade un bloque (aparece solo en la pantalla de selección):
+
 ```js
 desierto: {
   name: 'Desierto', icon: '🏜️', bg: '#e8c88a', title: 'Mi desierto',
@@ -150,14 +159,18 @@ Cómo funciona: el navegador recibe de Google un *ID token*; el servidor (`POST 
 
 1. **Atlas:** crea un clúster gratuito (M0), un usuario de base de datos y, en *Network Access*, permite `0.0.0.0/0` (Cloud Run no tiene IP fija).
 2. **Despliega** desde esta carpeta (usa el `Dockerfile`):
+
    ```bash
    gcloud run deploy brote --source . --region europe-west1 --allow-unauthenticated \
      --set-env-vars "MONGO_URI=mongodb+srv://USUARIO:PASSWORD@cluster0.xxxxx.mongodb.net/Brote,JWT_SECRET=TEXTO_LARGO_ALEATORIO,ADMIN_EMAIL=tu@correo.com"
    ```
+
 3. Copia la URL que te da (`https://brote-xxxx.run.app`) y actualiza `BASE_URL`:
+
    ```bash
    gcloud run services update brote --region europe-west1 --update-env-vars BASE_URL=https://brote-xxxx.run.app
    ```
+
 4. **Regístrate con `ADMIN_EMAIL`** y ya tendrás el panel de administración.
 5. Para actualizar la app, repite el comando del paso 2.
 
@@ -170,4 +183,5 @@ Más seguro: guarda `MONGO_URI` y `JWT_SECRET` en *Secret Manager* y usa `--set-
 ```bash
 npm test
 ```
+
 52 tests de autenticación, acceso con Google, recuperación de contraseña, panel de administración, tareas y mundo (deshacer exacto, concurrencia, tablero lleno, hábitos diarios, XP), ánimo y zonas horarias. Usan MongoDB en memoria (se descarga la primera vez) o la base **vacía** indicada en `MONGO_TEST_URI`. Se ejecutan automáticamente en GitHub Actions en cada *push*.
