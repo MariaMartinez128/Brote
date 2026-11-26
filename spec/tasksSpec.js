@@ -126,6 +126,32 @@ describe('Tareas y mundo', () => {
     expect(st.logros.find(l => l.id === 'mundo').unlocked).toBeTrue();
   }, 60000);
 
+  it('limpiar terminadas borra hechas y fallidas, conserva pendientes y hábitos diarios, y no toca el mundo ni a otros usuarios', async () => {
+    const otro = await alta(app, 'limpieza@test.es', 'Otro');
+    const ajena = (await otro.post('/api/tasks').send({ title: 'Ajena' })).body;
+    await otro.put('/api/tasks/' + ajena._id).send({ status: 'done' });
+
+    const hecha = await crear('Hecha'), fallida = await crear('Fallida'), pendiente = await crear('Pendiente');
+    const habito = await crear('Meditar', { type: 'Hábito', repeat: 'daily' });
+    await estado(hecha, 'done'); await estado(fallida, 'failed'); await estado(habito, 'done');
+    const w0 = await mundo();
+
+    expect((await ag.delete('/api/tasks')).status).toBe(400);
+    expect((await ag.delete('/api/tasks?status=pending')).status).toBe(400);
+    expect((await ag.delete('/api/tasks?status=done,raro')).status).toBe(400);
+
+    const r = await ag.delete('/api/tasks?status=done,failed');
+    expect(r.status).toBe(200);
+    const ids = (await ag.get('/api/tasks')).body.map(t => t._id);
+    expect(ids).not.toContain(hecha._id); expect(ids).not.toContain(fallida._id);
+    expect(ids).toContain(pendiente._id); expect(ids).toContain(habito._id);
+    expect(ids.some(id => id === ajena._id)).toBeFalse();
+    expect(r.body.deleted).toBeGreaterThanOrEqual(2);
+    expect((await mundo()).cells).toEqual(w0.cells);                // lo ganado se queda
+    expect((await otro.get('/api/tasks')).body.map(t => t._id)).toContain(ajena._id);
+    expect((await ag.delete('/api/tasks?status=done')).body.deleted).toBe(0);
+  });
+
   it('ya no se puede subir un tablero inventado', async () => {
     expect((await ag.put('/api/city').send({ cells: Array(50).fill('💎'), lost: 0 })).status).toBe(404);
   });

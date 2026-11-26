@@ -15,7 +15,7 @@ Tú eliges el escenario (un huerto, una ciudad, un sistema solar, una playa…) 
 
 **Para cualquier usuario**
 
-- **Tareas** de tres tipos (Estudio, Trabajo, Hábito) con **fecha límite**, **repetición diaria** para hábitos, filtros (Hoy · Pendientes · Hechas · Todas) y aviso de tareas vencidas. Se pueden completar, marcar como fallidas, editar, eliminar y **deshacer**.
+- **Tareas** de tres tipos (Estudio, Trabajo, Hábito) con **fecha límite**, **repetición diaria** para hábitos, filtros (Hoy · Pendientes · Hechas · Todas) y aviso de tareas vencidas. Se pueden completar, marcar como fallidas, editar, eliminar y **deshacer**, y **limpiar de golpe las terminadas** desde la pestaña Hechas.
 - **Mundo que crece o se destruye:** completar una tarea hace aparecer un elemento en el tablero (50 casillas); fallarla destruye uno. **Deshacer es exacto**: se quita justo la casilla que creó esa tarea. Si llenas el tablero, ¡mundo completado! y puedes empezar otro.
 - **10 escenarios** (🌱 Huerto, 🏙️ Ciudad, 🪐 Sistema solar, 🏖️ Playa, 🐠 Océano, 🌲 Bosque, 🐄 Granja, 🚀 Estación espacial, 🏰 Reino medieval, 🎋 Jardín zen), cada uno con su tablero, colores y textos, y su propio progreso.
 - **Pomodoro** fiable (calcula con la hora de fin, así no se desajusta con la pestaña en segundo plano y sobrevive a recargar la página), con sonido y aviso del navegador, tareas asociadas, descanso largo cada 4 sesiones y tiempos configurables.
@@ -91,7 +91,7 @@ Al arrancar se crean las frases motivacionales de ejemplo.
 | Autenticación | `POST /auth/register`, `POST /auth/login`, `POST /auth/logout`, `GET /auth/me`, `GET /auth/confirmar/:email/:key`, `POST /auth/forgot`, `POST /auth/reset`, `GET /auth/config`, `POST /auth/google` |
 | Usuario | `GET /user`, `PUT /user`, `PUT /user/scenario`, `POST /user/session`, `GET /user/stats`, `PUT /user/password`, `GET /user/export`, `DELETE /user` |
 | Escenarios | `GET /scenarios` |
-| Tareas | `GET /tasks`, `POST /tasks`, `PUT /tasks/:id` (editar o cambiar `status`), `DELETE /tasks/:id` |
+| Tareas | `GET /tasks`, `POST /tasks`, `PUT /tasks/:id` (editar o cambiar `status`), `DELETE /tasks/:id`, `DELETE /tasks?status=done,failed` (limpiar terminadas; conserva los hábitos diarios) |
 | Mundo | `GET /city`, `POST /city/reset` |
 | Ánimo | `POST /moods`, `POST /moods/otra`, `GET /moods/today`, `GET /moods/stats`, `GET /moods` |
 | Frases | `GET /phrases`, `POST /phrases`, `PUT /phrases/:id`, `DELETE /phrases/:id` |
@@ -184,4 +184,4 @@ Más seguro: guarda `MONGO_URI` y `JWT_SECRET` en *Secret Manager* y usa `--set-
 npm test
 ```
 
-52 tests de autenticación, acceso con Google, recuperación de contraseña, panel de administración, tareas y mundo (deshacer exacto, concurrencia, tablero lleno, hábitos diarios, XP), ánimo y zonas horarias. Usan MongoDB en memoria (se descarga la primera vez) o la base **vacía** indicada en `MONGO_TEST_URI`. Se ejecutan automáticamente en GitHub Actions en cada *push*.
+64 tests de autenticación, acceso con Google, recuperación de contraseña, panel de administración, tareas y mundo (deshacer exacto, concurrencia, tablero lleno, hábitos diarios, limpieza de terminadas, XP), ánimo y zonas horarias. Usan MongoDB en memoria (se descarga la primera vez) o la base **vacía** indicada en `MONGO_TEST_URI`. Se ejecutan automáticamente en GitHub Actions en cada *push*.
