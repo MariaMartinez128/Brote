@@ -72,6 +72,18 @@ r.put('/:id', wrap(async (req, res) => {
   res.status(out.code).json(out.body);
 }));
 
+// Limpieza en bloque: ?status=done,failed borra las tareas terminadas con esos estados.
+// Los hábitos diarios se conservan (vuelven a pendiente cada día) y el mundo no cambia, igual que al borrar una.
+const LIMPIABLES = ['done', 'failed'];
+r.delete('/', wrap(async (req, res) => {
+  const estados = String(req.query.status || '').split(',').map(s => s.trim()).filter(Boolean);
+  if (!estados.length || !estados.every(s => LIMPIABLES.includes(s)))
+    return res.status(400).json({ error: 'Indica qué tareas borrar: status=done, failed o done,failed' });
+  const { deletedCount } = await conCola(String(req.userId), () =>
+    Task.deleteMany({ user: req.userId, status: { $in: estados }, repeat: { $ne: 'daily' } }));
+  res.json({ deleted: deletedCount });
+}));
+
 // Eliminar una tarea no toca el mundo: lo que ya ganaste (o perdiste) se queda
 r.delete('/:id', wrap(async (req, res) => {
   const t = await Task.findOneAndDelete({ _id: req.params.id, user: req.userId });

@@ -168,11 +168,13 @@ function renderLevel() { if (S.stats) $('#navLvl').textContent = `Nivel ${S.stat
 /* ---------- tareas ---------- */
 const today = () => dayStr();
 const isToday = t => t.status === 'pending' ? (!t.dueDate || t.dueDate <= today()) : t.statusDay === today();
+const limpiable = t => t.status !== 'pending' && t.repeat !== 'daily';   // lo que borra "Limpiar terminadas"
 const FILTERS = { today: ['Hoy', isToday], pending: ['Pendientes', t => t.status === 'pending'], done: ['Hechas', t => t.status !== 'pending'], all: ['Todas', () => true] };
 async function loadTasks(quiet) { try { S.tasks = await api('/tasks'); } catch (e) { if (!quiet) fail(e); } renderTasks(); renderPomoTasks(); }
 function renderTasks() {
   $('#taskTabs').innerHTML = Object.entries(FILTERS).map(([k, [n, f]]) =>
     `<button data-f="${k}" role="tab" aria-selected="${S.filter === k}" class="${S.filter === k ? 'on' : ''}">${n} (${S.tasks.filter(f).length})</button>`).join('');
+  $('#taskTools').classList.toggle('hidden', S.filter !== 'done' || !S.tasks.some(limpiable));
   const list = S.tasks.filter(FILTERS[S.filter][1]).sort((a, b) => (a.status === 'pending' ? 0 : 1) - (b.status === 'pending' ? 0 : 1) || (a.dueDate || '9') .localeCompare(b.dueDate || '9'));
   const box = $('#taskList');
   if (!list.length) {
@@ -200,7 +202,16 @@ $('#taskForm').onsubmit = async e => {
     S.tasks.push(t); $('#tTitle').value = ''; $('#tDue').value = ''; $('#tRepeat').checked = false; renderAll(); $('#tTitle').focus();
   });
 };
-$('#tType').onchange = () => { if ($('#tType').value === 'Hábito') $('#tRepeat').checked = true; };
+$('#tClean').onclick = async () => {
+  const n = S.tasks.filter(limpiable).length; if (!n) return;
+  if (!await confirmar('Limpiar terminadas', `Se borrarán ${n} tarea${n === 1 ? '' : 's'} completada${n === 1 ? '' : 's'} o fallida${n === 1 ? '' : 's'}. Los hábitos diarios se conservan y lo que ya ganaste en tu mundo se queda.`, 'Limpiar')) return;
+  await busy($('#tClean'), async () => {
+    const r = await api('/tasks?status=done,failed', { method: 'DELETE' });
+    S.tasks = S.tasks.filter(t => !limpiable(t)); renderAll();
+    toast(`🧹 ${r.deleted} tarea${r.deleted === 1 ? '' : 's'} eliminada${r.deleted === 1 ? '' : 's'}`, true);
+  });
+};
+$('#tType').onchange =() => { if ($('#tType').value === 'Hábito') $('#tRepeat').checked = true; };
 $('#taskList').onclick = async e => {
   const btn = e.target.closest('[data-a]'); if (!btn) return;
   const row = btn.closest('.task'), task = S.tasks.find(t => t._id === row.dataset.id); if (!task) return;
